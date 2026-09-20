@@ -125,15 +125,38 @@
 
   /* ---------- 播放本地 IndexedDB 视频 ---------- */
   async function playLocalVideo(ep) {
+    // 优先使用临时 URL（导入后立即播放，后台写入 IndexedDB 时）
+    const epData = state.eps[ep] || {};
+    if (epData._tempUrl) {
+      const oldUrl = currentObjectUrl;
+      els.posterLayer.hidden = true;
+      els.posterEmpty.hidden = true;
+      currentObjectUrl = epData._tempUrl;
+      els.video.src = currentObjectUrl;
+      els.video.play().catch(() => {});
+      // 新视频播放后再释放旧 URL，避免画面闪烁
+      if (oldUrl && oldUrl !== currentObjectUrl) {
+        setTimeout(() => { try { URL.revokeObjectURL(oldUrl); } catch (e) {} }, 1000);
+      }
+      return;
+    }
     const key = 'video_' + ep;
     const blob = await PlayerDB.get(key);
     if (!blob) { showPosterEmpty('第 ' + ep + ' 集暂无视频'); return; }
-    destroyMedia();
+    // 先准备好新视频 URL，再切换画面，避免黑屏闪烁
+    const newUrl = URL.createObjectURL(blob);
+    const oldUrl = currentObjectUrl;
     els.posterLayer.hidden = true;
     els.posterEmpty.hidden = true;
-    currentObjectUrl = URL.createObjectURL(blob);
-    els.video.src = currentObjectUrl;
+    currentObjectUrl = newUrl;
+    els.video.src = newUrl;
     els.video.play().catch(() => {});
+    // 新视频播放后再释放旧 URL 和销毁 hls/flv，避免画面抖动
+    if (oldUrl && oldUrl !== newUrl) {
+      setTimeout(() => { try { URL.revokeObjectURL(oldUrl); } catch (e) {} }, 1000);
+    }
+    if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
+    if (flvPlayer) { try { flvPlayer.destroy(); } catch (e) {} flvPlayer = null; }
   }
 
   /* ---------- 显示封面 / 空提示 ---------- */
@@ -279,6 +302,7 @@
   /* ---------- 导入 ---------- */
   async function importVideoTo(ep, file) {
     els.loading.hidden = false;
+    const isPWA = !window.playerAPI && !window.androidAPI;
     try {
       // 获取文件真实路径（Electron / 安卓）
       let filePath = null;
@@ -287,29 +311,55 @@
       else if (window.__lastImportedPath) { filePath = window.__lastImportedPath; window.__lastImportedPath = null; }
       // 记录当前视频文件（含路径与编码，供兼容转码使用）
       pendingVideoFile = { ep: ep, file: file, path: filePath, isHevc: false };
-      // 检测 HEVC 编码（网盘下载的 MP4 常见，无法直接播放）
-      // 大文件也检测（采样头/中/尾，不读全文件）
-      try { pendingVideoFile.isHevc = await detectHevc(file); } catch (e) {}
-      await PlayerDB.put('video_' + ep, file);
-      localVideos.add(ep);
-      if (!state.eps[ep]) state.eps[ep] = {};
-      delete state.eps[ep].remoteUrl;   // 本地视频优先，清除网盘链接
-      saveState();
-      els.convertTip.hidden = true;
-      // 检测到 HEVC 且有转码能力时，直接显示一键转码提示，不尝试黑屏播放
-      if (pendingVideoFile.isHevc && (window.playerAPI || window.androidAPI)) {
+      // HEVC 编码检测：仅在有转码能力的环境（Electron/安卓）执行，PWA 跳过节省时间
+      if (!isPWA) {
+        try { pendingVideoFile.isHevc = await detectHevc(file); } catch (e) {}
+      }
+      // PWA 环境：先创建本地 URL 立即播放，再后台写入 IndexedDB（减少等待）
+      if (isPWA) {
+        const objectUrl = URL.createObjectURL(file);
+        // 立即标记为有视频并播放
+        localVideos.add(ep);
+        if (!state.eps[ep]) state.eps[ep] = {};
+        delete state.eps[ep].remoteUrl;
+        state.eps[ep]._tempUrl = objectUrl;
+        saveState();
         await playEpisode(ep);
-        // 延迟显示转码提示（让视频先加载，触发 error 后也会显示）
-        setTimeout(() => {
-          if (els.video.error || els.video.videoWidth === 0) {
-            els.convertTip.hidden = false;
-            els.posterLayer.hidden = false;
-            els.posterImg.hidden = true;
-            els.posterEmpty.hidden = true;
+        // 后台异步写入 IndexedDB
+        (async () => {
+          try {
+            await PlayerDB.put('video_' + ep, file);
+            // 写入完成后清除临时 URL，后续播放从 IndexedDB 读取
+            if (state.eps[ep] && state.eps[ep]._tempUrl === objectUrl) {
+              delete state.eps[ep]._tempUrl;
+              saveState();
+            }
+          } catch (e) {
+            console.warn('视频后台保存失败：', e);
           }
-        }, 2000);
+        })();
       } else {
-        await playEpisode(ep);
+        // Electron / 安卓：正常写入 IndexedDB 后播放
+        await PlayerDB.put('video_' + ep, file);
+        localVideos.add(ep);
+        if (!state.eps[ep]) state.eps[ep] = {};
+        delete state.eps[ep].remoteUrl;
+        saveState();
+        els.convertTip.hidden = true;
+        // 检测到 HEVC 且有转码能力时，直接显示一键转码提示
+        if (pendingVideoFile.isHevc && (window.playerAPI || window.androidAPI)) {
+          await playEpisode(ep);
+          setTimeout(() => {
+            if (els.video.error || els.video.videoWidth === 0) {
+              els.convertTip.hidden = false;
+              els.posterLayer.hidden = false;
+              els.posterImg.hidden = true;
+              els.posterEmpty.hidden = true;
+            }
+          }, 2000);
+        } else {
+          await playEpisode(ep);
+        }
       }
     } catch (e) {
       alert('视频保存失败：' + e.message);
