@@ -495,7 +495,7 @@
      'btnNext','btnFull','btnEpToggle','epMask','btnEpClose',
      'btnMore','moreMenu','mmLoop','mmLoopSwitch','mmDanmaku','mmDanmakuSwitch',
      'epList','episodePanel','btnEpSet','btnEpImport','hintBar','videoZoomWrap','posterZoomWrap','btnClearAll',
-     'modalSettings','setSeriesName','setEpCount','setEpTitle','setColor','colorPreview','setRatio','setSpeed','setShowPauseIcon','setEpDisplayMode','setDanmakuInput','setDanmakuMode','setLicenseServerEnabled','setLicenseServer','btnSaveSettings','licenseInfo',
+     'modalSettings','setSeriesName','setEpCount','setEpTitle','setColor','colorPreview','setRatio','setSpeed','setShowPauseIcon','setEpDisplayMode','setDanmakuInput','setDanmakuMode','setLicenseServerEnabled','setLicenseServer','btnSaveSettings','licenseInfo','btnOpenActivate',
      'modalNetwork','netUrl','netEp','netTip','btnNetClear','btnNetSave',
      'modalEpSet','quickEpCount','btnQuickEpSave','fileVideo','fileImage','brandDot','videoStage',
      'convertTip','btnConvert','activateMask','actCode','btnActivate','actMsg','actExp','actRemember',
@@ -578,6 +578,8 @@
     applyDanmakuInputVisibility();
     // 播放当前集
     await playEpisode(state.currentEp);
+    // 检查激活状态，未激活则弹出激活界面
+    await checkActivation();
   }
 
   /* ---------- 事件绑定 ---------- */
@@ -860,6 +862,11 @@
     // 设置
     $('btnSettings').addEventListener('click', openSettings);
     els.btnSaveSettings.addEventListener('click', saveSettings);
+    if (els.btnOpenActivate) els.btnOpenActivate.addEventListener('click', () => {
+      els.activateMask.hidden = false;
+      if (els.actMsg) { els.actMsg.textContent = ''; els.actMsg.className = ''; }
+      if (els.actCode) els.actCode.focus();
+    });
     els.setColor.addEventListener('input', () => {
       els.colorPreview.textContent = els.setColor.value;
       document.documentElement.style.setProperty('--accent', els.setColor.value);
