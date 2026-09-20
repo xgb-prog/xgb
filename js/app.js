@@ -73,10 +73,14 @@
   }
   function applyAccent() {
     document.documentElement.style.setProperty('--accent', state.accentColor);
-    els.playerFrame.style.borderColor = state.accentColor;
-    els.playerFrame.style.boxShadow = '0 0 24px -6px ' + state.accentColor;
-    els.brandDot.style.background = state.accentColor;
-    els.brandDot.style.boxShadow = '0 0 12px ' + state.accentColor;
+    if (els.playerFrame) {
+      els.playerFrame.style.borderColor = state.accentColor;
+      els.playerFrame.style.boxShadow = '0 0 24px -6px ' + state.accentColor;
+    }
+    if (els.brandDot) {
+      els.brandDot.style.background = state.accentColor;
+      els.brandDot.style.boxShadow = '0 0 12px ' + state.accentColor;
+    }
   }
   function epTitleText(ep) {
     const custom = state.eps[ep] && state.eps[ep].title;
@@ -1090,12 +1094,12 @@
     if (state.currentEp > state.totalEpisodes) state.currentEp = state.totalEpisodes;
 
     applyAccent();
-    els.video.playbackRate = state.speed;
+    if (els.video) els.video.playbackRate = state.speed;
     applyRatio();
     renderEpisodeList();
     if (els.titleSeriesName) els.titleSeriesName.textContent = state.seriesName;
     const curEpTitle = (state.eps[state.currentEp] && state.eps[state.currentEp].title) || ('第' + state.currentEp + '集');
-    els.titleBarText.textContent = curEpTitle;
+    if (els.titleBarText) els.titleBarText.textContent = curEpTitle;
     // 同步更多菜单中的倍速/比例选中态
     document.querySelectorAll('.mm-speed-item').forEach(x => x.classList.toggle('active', parseFloat(x.dataset.s) === state.speed));
     document.querySelectorAll('.mm-ratio-item').forEach(x => x.classList.toggle('active', x.dataset.r === state.ratio));
@@ -1110,6 +1114,7 @@
   }
 
   function applyRatio() {
+    if (!els.videoStage) return;
     els.videoStage.classList.remove('ratio-169', 'ratio-916', 'ratio-43', 'ratio-origin', 'ratio-auto');
     let cls = 'ratio-auto';
     if (state.ratio === '16:9') cls = 'ratio-169';
