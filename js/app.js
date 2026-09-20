@@ -48,6 +48,10 @@
         if (!state.eps) state.eps = {};
       }
     } catch (e) {}
+    // 范围保护：集数至少为1
+    if (!state.totalEpisodes || state.totalEpisodes < 1) state.totalEpisodes = 12;
+    if (!state.currentEp || state.currentEp < 1) state.currentEp = 1;
+    if (state.currentEp > state.totalEpisodes) state.currentEp = state.totalEpisodes;
   }
   function fmtTime(t) {
     if (!isFinite(t) || t < 0) t = 0;
@@ -187,38 +191,42 @@
 
   /* ---------- 选集列表渲染 ---------- */
   function renderEpisodeList() {
+    if (!els.epList) return;
     els.epList.innerHTML = '';
-    for (let i = 1; i <= state.totalEpisodes; i++) {
-      const d = document.createElement('div');
-      d.className = 'ep-item' + (i === state.currentEp ? ' active' : '') + (hasVideo(i) ? ' has-video' : '') + (state.epDisplayMode === 'num' ? ' num-only' : '');
-      // 集数
-      const num = document.createElement('span');
-      num.className = 'ep-num';
-      num.textContent = '第' + i + '集';
-      d.appendChild(num);
-      // 集名（非纯数字模式）
-      if (state.epDisplayMode !== 'num') {
-        const name = document.createElement('span');
-        name.className = 'ep-name';
-        name.textContent = (state.eps[i] && state.eps[i].title) || '';
-        d.appendChild(name);
-        const edit = document.createElement('span');
-        edit.className = 'ep-edit';
-        edit.textContent = '✎';
-        edit.addEventListener('click', (e) => {
-          e.stopPropagation();
-          renameEpisode(i);
+    const count = Math.max(1, parseInt(state.totalEpisodes, 10) || 12);
+    for (let i = 1; i <= count; i++) {
+      try {
+        const d = document.createElement('div');
+        d.className = 'ep-item' + (i === state.currentEp ? ' active' : '') + (hasVideo(i) ? ' has-video' : '') + (state.epDisplayMode === 'num' ? ' num-only' : '');
+        // 集数
+        const num = document.createElement('span');
+        num.className = 'ep-num';
+        num.textContent = '第' + i + '集';
+        d.appendChild(num);
+        // 集名（非纯数字模式）
+        if (state.epDisplayMode !== 'num') {
+          const name = document.createElement('span');
+          name.className = 'ep-name';
+          name.textContent = (state.eps[i] && state.eps[i].title) || '';
+          d.appendChild(name);
+          const edit = document.createElement('span');
+          edit.className = 'ep-edit';
+          edit.textContent = '✎';
+          edit.addEventListener('click', (e) => {
+            e.stopPropagation();
+            renameEpisode(i);
+          });
+          d.appendChild(edit);
+        }
+        d.addEventListener('click', () => {
+          playEpisode(i);
+          // 选集后自动关闭选集面板
+          closeEpisodePanel();
         });
-        d.appendChild(edit);
-      }
-      d.addEventListener('click', () => {
-        playEpisode(i);
-        // 选集后自动关闭选集面板
-        closeEpisodePanel();
-      });
-      els.epList.appendChild(d);
+        els.epList.appendChild(d);
+      } catch (e) {}
     }
-    renderNetEpSelect();
+    try { renderNetEpSelect(); } catch (e) {}
   }
 
   /* ---------- 选集面板开关 ---------- */
