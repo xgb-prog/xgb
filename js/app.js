@@ -18,10 +18,11 @@
     speed: 1,
     currentEp: 1,
     epDisplayMode: 'full',  // 'full'=显示集数+名字, 'num'=只显示集数
-    danmakuInputVisible: true,  // 弹幕输入框是否显示
+    danmakuInputVisible: false,  // 弹幕输入框是否显示（默认不显示）
     danmakuMode: 'scroll',  // 弹幕模式：scroll=滚动飘过, fixed=固定不动
     licenseServerEnabled: true,  // 是否启用服务端验证（默认启用）
     licenseServer: '/api',  // 授权服务器地址（Netlify反向代理，同域名无跨域问题）
+    customDuration: 0,  // 自定义视频时长（分钟），0=使用实际时长
     eps: {}          // { N: { title:'', remoteUrl:'' } }
   };
 
@@ -62,6 +63,13 @@
       return String(h).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     }
     return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+  // 获取有效视频时长（秒）：设置了自定义时长则用自定义，否则用视频实际时长
+  function getEffectiveDuration() {
+    if (state.customDuration && state.customDuration > 0) {
+      return state.customDuration * 60;
+    }
+    return els.video.duration || 0;
   }
   function applyAccent() {
     document.documentElement.style.setProperty('--accent', state.accentColor);
@@ -562,7 +570,7 @@
      'btnNext','btnFull','btnEpToggle','epMask','btnEpClose',
      'btnMore','moreMenu','mmLoop','mmLoopSwitch','mmDanmaku','mmDanmakuSwitch',
      'epList','episodePanel','btnEpSet','btnEpImport','hintBar','videoZoomWrap','posterZoomWrap','btnClearAll',
-     'modalSettings','setSeriesName','setEpCount','setEpTitle','setColor','colorPreview','setRatio','setSpeed','setShowPauseIcon','setEpDisplayMode','setDanmakuInput','setDanmakuMode','setLicenseServerEnabled','setLicenseServer','btnSaveSettings','licenseInfo',
+     'modalSettings','setSeriesName','setEpCount','setEpTitle','setColor','colorPreview','setRatio','setSpeed','setCustomDuration','setShowPauseIcon','setEpDisplayMode','setDanmakuInput','setDanmakuMode','setLicenseServerEnabled','setLicenseServer','btnSaveSettings','licenseInfo',
      'modalNetwork','netUrl','netEp','netTip','btnNetClear','btnNetSave',
      'modalEpSet','quickEpCount','btnQuickEpSave','fileVideo','fileImage','brandDot','videoStage',
      'convertTip','btnConvert','activateMask','actCode','btnActivate','actMsg','actExp','actRemember',
@@ -729,24 +737,31 @@
     // 进度
     els.video.addEventListener('timeupdate', () => {
       if (isSeeking) return;
-      if (els.video.duration) {
-        els.seek.value = Math.round(els.video.currentTime / els.video.duration * 1000);
+      const dur = getEffectiveDuration();
+      if (dur) {
+        els.seek.value = Math.round(els.video.currentTime / dur * 1000);
       }
       els.curTime.textContent = fmtTime(els.video.currentTime);
-      els.durTime.textContent = fmtTime(els.video.duration);
+      els.durTime.textContent = fmtTime(dur);
     });
     els.video.addEventListener('loadedmetadata', () => {
-      els.durTime.textContent = fmtTime(els.video.duration);
+      els.durTime.textContent = fmtTime(getEffectiveDuration());
     });
     els.seek.addEventListener('input', () => {
       isSeeking = true;
-      if (els.video.duration) {
-        const t = els.seek.value / 1000 * els.video.duration;
+      const dur = getEffectiveDuration();
+      if (dur) {
+        const t = els.seek.value / 1000 * dur;
         els.curTime.textContent = fmtTime(t);
       }
     });
     els.seek.addEventListener('change', () => {
-      if (els.video.duration) els.video.currentTime = els.seek.value / 1000 * els.video.duration;
+      const dur = getEffectiveDuration();
+      if (dur) {
+        const target = els.seek.value / 1000 * dur;
+        // 自定义时长时，限制跳转不超过视频实际时长
+        els.video.currentTime = Math.min(target, els.video.duration || target);
+      }
       isSeeking = false;
     });
 
@@ -1041,6 +1056,7 @@
     if (els.setDanmakuMode) els.setDanmakuMode.value = state.danmakuMode || 'scroll';
     if (els.setLicenseServerEnabled) els.setLicenseServerEnabled.checked = state.licenseServerEnabled;
     if (els.setLicenseServer) els.setLicenseServer.value = state.licenseServer || '';
+    if (els.setCustomDuration) els.setCustomDuration.value = state.customDuration || 0;
     els.setEpTitle.value = (state.eps[state.currentEp] && state.eps[state.currentEp].title) || '';
     updateLicenseInfo();
     els.modalSettings.hidden = false;
@@ -1052,6 +1068,7 @@
     state.accentColor = els.setColor.value;
     state.ratio = els.setRatio.value;
     state.speed = parseFloat(els.setSpeed.value) || 1;
+    if (els.setCustomDuration) state.customDuration = Math.max(0, parseFloat(els.setCustomDuration.value) || 0);
     if (els.setEpDisplayMode) state.epDisplayMode = els.setEpDisplayMode.value || 'full';
     if (els.setDanmakuInput) state.danmakuInputVisible = els.setDanmakuInput.value === '1';
     if (els.setDanmakuMode) state.danmakuMode = els.setDanmakuMode.value;
@@ -1076,6 +1093,8 @@
     // 同步更多菜单中的倍速/比例选中态
     document.querySelectorAll('.mm-speed-item').forEach(x => x.classList.toggle('active', parseFloat(x.dataset.s) === state.speed));
     document.querySelectorAll('.mm-ratio-item').forEach(x => x.classList.toggle('active', x.dataset.r === state.ratio));
+    // 立即更新时长显示
+    if (els.durTime) els.durTime.textContent = fmtTime(getEffectiveDuration());
     saveState();
     els.modalSettings.hidden = true;
   }
