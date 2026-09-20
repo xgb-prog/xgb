@@ -178,6 +178,10 @@
       await showCoverOrEmpty(ep);
     }
     renderEpisodeList();
+    // 更新选集面板导入按钮的集数显示
+    if (els.btnEpImport && !els.episodePanel.hidden && els.episodePanel.classList.contains('show')) {
+      els.btnEpImport.textContent = '第' + ep + '集';
+    }
     saveState();
   }
 
@@ -222,6 +226,8 @@
     els.episodePanel.classList.add('show');
     els.epMask.hidden = false;
     showControls();
+    // 更新导入按钮显示当前集数
+    if (els.btnEpImport) els.btnEpImport.textContent = '第' + state.currentEp + '集';
     // 滚动到当前集
     setTimeout(() => {
       const activeItem = els.epList.querySelector('.ep-item.active');

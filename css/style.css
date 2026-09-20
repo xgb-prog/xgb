@@ -464,6 +464,7 @@ input[type="range"]::-moz-range-thumb {
 .ep-item.num-only { justify-content: center; }
 
 .ep-footer {
+  display: none;
   padding: 10px 12px 14px;
   border-top: 1px solid rgba(255,255,255,.08);
   flex-shrink: 0;
