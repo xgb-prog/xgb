@@ -1045,12 +1045,12 @@
   }
   function openSettings() {
     try {
-    els.setSeriesName.value = state.seriesName;
-    els.setEpCount.value = state.totalEpisodes;
-    els.setColor.value = state.accentColor;
-    els.colorPreview.textContent = state.accentColor;
-    els.setRatio.value = state.ratio;
-    els.setSpeed.value = String(state.speed);
+    if (els.setSeriesName) els.setSeriesName.value = state.seriesName;
+    if (els.setEpCount) els.setEpCount.value = state.totalEpisodes;
+    if (els.setColor) els.setColor.value = state.accentColor;
+    if (els.colorPreview) els.colorPreview.textContent = state.accentColor;
+    if (els.setRatio) els.setRatio.value = state.ratio;
+    if (els.setSpeed) els.setSpeed.value = String(state.speed);
     if (els.setShowPauseIcon) els.setShowPauseIcon.value = state.showPauseIcon ? '1' : '0';
     if (els.setEpDisplayMode) els.setEpDisplayMode.value = state.epDisplayMode || 'full';
     if (els.setDanmakuInput) els.setDanmakuInput.value = state.danmakuInputVisible ? '1' : '0';
@@ -1058,7 +1058,7 @@
     if (els.setLicenseServerEnabled) els.setLicenseServerEnabled.checked = state.licenseServerEnabled;
     if (els.setLicenseServer) els.setLicenseServer.value = state.licenseServer || '';
     if (els.setCustomDuration) els.setCustomDuration.value = state.customDuration || 0;
-    els.setEpTitle.value = (state.eps[state.currentEp] && state.eps[state.currentEp].title) || '';
+    if (els.setEpTitle) els.setEpTitle.value = (state.eps[state.currentEp] && state.eps[state.currentEp].title) || '';
     updateLicenseInfo();
     els.modalSettings.hidden = false;
     } catch (e) {
@@ -1069,11 +1069,11 @@
 
   function saveSettings() {
     try {
-    state.seriesName = els.setSeriesName.value.trim() || '智能播放器';
-    state.totalEpisodes = Math.max(1, Math.min(999, parseInt(els.setEpCount.value, 10) || 1));
-    state.accentColor = els.setColor.value;
-    state.ratio = els.setRatio.value;
-    state.speed = parseFloat(els.setSpeed.value) || 1;
+    state.seriesName = (els.setSeriesName?.value || '').trim() || '智能播放器';
+    state.totalEpisodes = Math.max(1, Math.min(999, parseInt(els.setEpCount?.value, 10) || 1));
+    state.accentColor = els.setColor?.value || '#ff3b30';
+    state.ratio = els.setRatio?.value || 'auto';
+    state.speed = parseFloat(els.setSpeed?.value) || 1;
     if (els.setCustomDuration) state.customDuration = Math.max(0, parseFloat(els.setCustomDuration.value) || 0);
     if (els.setEpDisplayMode) state.epDisplayMode = els.setEpDisplayMode.value || 'full';
     if (els.setDanmakuInput) state.danmakuInputVisible = els.setDanmakuInput.value === '1';
@@ -1083,7 +1083,7 @@
     applyDanmakuInputVisibility();
 
     if (!state.eps[state.currentEp]) state.eps[state.currentEp] = {};
-    const t = els.setEpTitle.value.trim();
+    const t = (els.setEpTitle?.value || '').trim();
     if (t) state.eps[state.currentEp].title = t;
     else delete state.eps[state.currentEp].title;
 
