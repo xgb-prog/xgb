@@ -1336,12 +1336,27 @@
     els.btnActivate.addEventListener('click', () => doActivate());
     els.actCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') doActivate(); });
     bindV5Features();
-    await init();
-    await checkActivation();
+    // 激活检查优先执行，确保未激活时一定弹出激活窗口
+    // （放在 init 之前，避免 init 出错导致激活检查被跳过）
+    try { await checkActivation(); } catch (e) { console.warn('激活检查出错：', e); }
+    try { await init(); } catch (e) { console.warn('初始化出错：', e); }
   });
 
   /* ========== v5 新功能（极简界面版） ========== */
   function bindV5Features() {
+    // --- 选集面板/遮罩层阻止触摸事件冒泡，避免干扰视频缩放层导致单击失效 ---
+    if (els.episodePanel) {
+      const stopTouch = (e) => e.stopPropagation();
+      els.episodePanel.addEventListener('touchstart', stopTouch, { passive: true });
+      els.episodePanel.addEventListener('touchmove', stopTouch, { passive: true });
+      els.episodePanel.addEventListener('touchend', stopTouch, { passive: true });
+    }
+    if (els.epMask) {
+      const stopTouch = (e) => e.stopPropagation();
+      els.epMask.addEventListener('touchstart', stopTouch, { passive: true });
+      els.epMask.addEventListener('touchmove', stopTouch, { passive: true });
+      els.epMask.addEventListener('touchend', stopTouch, { passive: true });
+    }
     // --- 一键清除 ---
     if (els.btnClearAll) els.btnClearAll.addEventListener('click', async () => {
       if (!confirm('确定要清除所有导入的视频和图片吗？此操作不可恢复！')) return;

@@ -376,6 +376,7 @@ input[type="range"]::-moz-range-thumb {
   border-left: 1px solid rgba(255,255,255,.08);
   box-sizing: border-box;
   will-change: right;
+  touch-action: manipulation;
 }
 .episode-panel.show { right: 0; }
 
@@ -494,6 +495,7 @@ input[type="range"]::-moz-range-thumb {
   opacity: 0;
   pointer-events: none;
   transition: opacity .2s;
+  touch-action: manipulation;
 }
 .ep-mask.show {
   opacity: 1;
