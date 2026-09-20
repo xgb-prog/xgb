@@ -3,69 +3,138 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>青柠漫剧 - 激活码管理后台</title>
+<title>青柠漫剧 - 激活码管理系统</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, #0a1628 0%, #1a2f4a 50%, #0d3b2e 100%);
     min-height: 100vh;
+    color: #e0e6ed;
     padding: 20px;
   }
-  .container { max-width: 1100px; margin: 0 auto; }
-  .header { text-align: center; color: #fff; margin-bottom: 25px; }
-  .header h1 { font-size: 26px; margin-bottom: 6px; }
-  .header p { font-size: 13px; opacity: 0.9; }
+  .container { max-width: 1200px; margin: 0 auto; }
 
-  /* 全局配置栏 */
+  /* 顶部标题 */
+  .header {
+    text-align: center;
+    padding: 20px 0 25px;
+  }
+  .header h1 {
+    font-size: 30px;
+    background: linear-gradient(90deg, #4ade80, #22d3ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .header p { color: #7a8ba0; font-size: 14px; }
+
+  /* 配置栏 */
   .config-bar {
-    background: rgba(255,255,255,0.95);
-    border-radius: 12px;
-    padding: 15px 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 18px 22px;
     margin-bottom: 20px;
     display: flex;
-    gap: 15px;
+    gap: 14px;
     flex-wrap: wrap;
     align-items: flex-end;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
   }
-  .config-bar .form-group { margin-bottom: 0; flex: 1; min-width: 200px; }
-  .config-bar label { font-size: 12px; color: #666; margin-bottom: 4px; }
-  .config-bar input { padding: 8px 12px; font-size: 13px; }
+  .config-bar .form-group { margin-bottom: 0; flex: 1; min-width: 180px; }
+  .config-bar label { font-size: 12px; color: #8899aa; margin-bottom: 5px; }
+  .config-bar input { padding: 9px 12px; font-size: 13px; }
+  .conn-status {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    display: inline-block;
+    margin-top: 6px;
+  }
+  .conn-status.ok { background: rgba(74,222,128,0.15); color: #4ade80; }
+  .conn-status.fail { background: rgba(248,113,113,0.15); color: #f87171; }
 
+  /* 标签页 */
   .tabs {
     display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
+    gap: 6px;
+    margin-bottom: 18px;
     flex-wrap: wrap;
+    background: rgba(255,255,255,0.03);
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
   }
   .tab {
-    padding: 10px 20px;
-    background: rgba(255,255,255,0.25);
-    color: #fff;
+    padding: 10px 18px;
+    background: transparent;
+    color: #8899aa;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
     transition: all 0.2s;
+    flex: 1;
+    min-width: 100px;
   }
-  .tab:hover { background: rgba(255,255,255,0.35); }
-  .tab.active { background: #fff; color: #ff6b6b; }
+  .tab:hover { color: #c0d0e0; background: rgba(255,255,255,0.05); }
+  .tab.active {
+    background: linear-gradient(135deg, rgba(74,222,128,0.2), rgba(34,211,238,0.15));
+    color: #4ade80;
+    box-shadow: 0 2px 10px rgba(74,222,128,0.2);
+  }
 
+  /* 面板 */
   .panel {
-    background: #fff;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 16px;
-    padding: 25px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    padding: 24px;
+    backdrop-filter: blur(10px);
     display: none;
   }
   .panel.active { display: block; }
+  .panel h2 {
+    font-size: 18px;
+    color: #4ade80;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
+  /* 统计卡片 */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-card .num { font-size: 32px; font-weight: 700; }
+  .stat-card .label { font-size: 13px; color: #8899aa; margin-top: 4px; }
+  .stat-card.total .num { color: #a0aec0; }
+  .stat-card.unused .num { color: #60a5fa; }
+  .stat-card.activated .num { color: #4ade80; }
+  .stat-card.disabled .num { color: #f87171; }
+  .stat-card.licenses .num { color: #fbbf24; }
+
+  /* 表单 */
   .form-group { margin-bottom: 16px; }
   label {
     display: block;
-    color: #555;
+    color: #a0b0c0;
     margin-bottom: 6px;
     font-weight: 600;
     font-size: 13px;
@@ -73,20 +142,22 @@
   input, select, textarea {
     width: 100%;
     padding: 10px 14px;
-    border: 2px solid #e8e8e8;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.12);
     border-radius: 8px;
+    color: #e0e6ed;
     font-size: 14px;
     transition: border-color 0.2s;
-  }
-  input:focus, select:focus, textarea:focus {
     outline: none;
-    border-color: #ff6b6b;
   }
-  textarea { resize: vertical; min-height: 120px; font-family: 'Courier New', monospace; font-size: 13px; }
+  input:focus, select:focus, textarea:focus { border-color: #4ade80; }
+  textarea { resize: vertical; min-height: 140px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; }
+  select option { background: #1a2f4a; }
 
-  .row { display: flex; gap: 12px; }
-  .row .form-group { flex: 1; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row .form-group { flex: 1; min-width: 150px; }
 
+  /* 按钮 */
   .btn-group { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
   button {
     padding: 10px 20px;
@@ -97,209 +168,282 @@
     cursor: pointer;
     transition: all 0.2s;
   }
-  button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  button:hover { transform: translateY(-1px); }
   button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .btn-primary { background: linear-gradient(135deg, #ff9a56, #ff6b6b); color: #fff; }
-  .btn-success { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #fff; }
-  .btn-warning { background: linear-gradient(135deg, #fa709a, #fee140); color: #fff; }
-  .btn-danger { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; }
-  .btn-info { background: linear-gradient(135deg, #4facfe, #00f2fe); color: #fff; }
-  .btn-small { padding: 5px 12px; font-size: 12px; }
-
-  /* 结果提示 */
-  .result {
-    margin-top: 16px;
-    padding: 14px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    display: none;
-    line-height: 1.6;
+  .btn-primary {
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    color: #0a1628;
   }
-  .result.show { display: block; }
-  .result.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-  .result.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-  .result.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-  .result pre {
-    margin-top: 10px;
-    padding: 10px;
-    background: rgba(0,0,0,0.06);
-    border-radius: 6px;
-    font-size: 12px;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-break: break-all;
+  .btn-primary:hover { box-shadow: 0 4px 15px rgba(74,222,128,0.35); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: #c0d0e0;
+    border: 1px solid rgba(255,255,255,0.15);
   }
-
-  /* 统计卡片 */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
+  .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+  .btn-danger {
+    background: rgba(248,113,113,0.15);
+    color: #f87171;
+    border: 1px solid rgba(248,113,113,0.3);
   }
-  .stat-card {
-    background: linear-gradient(135deg, #fff5f0 0%, #ffe8e8 100%);
-    padding: 18px;
-    border-radius: 12px;
-    text-align: center;
-    border: 1px solid #ffe0e0;
+  .btn-danger:hover { background: rgba(248,113,113,0.25); }
+  .btn-warning {
+    background: rgba(251,191,36,0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(251,191,36,0.3);
   }
-  .stat-value { font-size: 26px; font-weight: 700; color: #ff6b6b; }
-  .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+  .btn-warning:hover { background: rgba(251,191,36,0.25); }
+  .btn-info {
+    background: rgba(96,165,250,0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(96,165,250,0.3);
+  }
+  .btn-info:hover { background: rgba(96,165,250,0.25); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
 
   /* 表格 */
-  .table-wrap { overflow-x: auto; margin-top: 12px; }
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
   table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
   }
-  th, td {
-    padding: 10px 12px;
+  thead { background: rgba(74,222,128,0.08); }
+  th {
+    padding: 12px 14px;
     text-align: left;
-    border-bottom: 1px solid #f0f0f0;
+    color: #4ade80;
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
   }
-  th { background: #fafafa; font-weight: 600; color: #555; white-space: nowrap; }
-  tr:hover { background: #fafafa; }
-  td code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: #c0d0e0;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .code-text { font-family: 'Courier New', monospace; color: #60a5fa; font-weight: 600; letter-spacing: 0.5px; }
 
+  /* 状态标签 */
   .badge {
     display: inline-block;
     padding: 3px 10px;
-    border-radius: 12px;
+    border-radius: 20px;
     font-size: 11px;
     font-weight: 600;
-    white-space: nowrap;
   }
-  .badge-unused { background: #e3f2fd; color: #1565c0; }
-  .badge-activated { background: #e8f5e9; color: #2e7d32; }
-  .badge-disabled { background: #ffebee; color: #c62828; }
+  .badge.unused { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  .badge.activated { background: rgba(74,222,128,0.15); color: #4ade80; }
+  .badge.disabled { background: rgba(248,113,113,0.15); color: #f87171; }
+  .badge.type-D { background: rgba(74,222,128,0.12); color: #86efac; }
+  .badge.type-M { background: rgba(96,165,250,0.12); color: #93c5fd; }
+  .badge.type-Y { background: rgba(251,191,36,0.12); color: #fcd34d; }
 
   /* 分页 */
   .pagination {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    margin-top: 18px;
+    margin-top: 16px;
     flex-wrap: wrap;
+    gap: 10px;
   }
-  .pagination button { padding: 7px 14px; font-size: 13px; }
-  .pagination span { font-size: 13px; color: #666; }
-
-  /* 文件上传 */
-  .file-upload {
-    border: 2px dashed #ddd;
-    border-radius: 8px;
-    padding: 25px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .file-upload:hover { border-color: #ff6b6b; background: #fff8f8; }
-  .file-upload p { color: #999; font-size: 14px; }
-
-  /* 加载中 */
-  .loading {
-    text-align: center;
-    color: #888;
-    margin-top: 12px;
-    padding: 15px;
-    display: none;
-    font-size: 14px;
-  }
-  .loading.show { display: block; }
-  .loading::after { content: '...'; animation: dots 1.5s steps(4, end) infinite; }
-  @keyframes dots {
-    0%, 20% { content: '.'; }
-    40% { content: '..'; }
-    60%, 100% { content: '...'; }
-  }
-
-  .empty-tip {
-    text-align: center;
-    color: #999;
-    padding: 30px;
-    font-size: 14px;
-  }
-
-  .footer {
-    text-align: center;
-    margin-top: 25px;
-    color: rgba(255,255,255,0.8);
+  .pagination .info { font-size: 13px; color: #8899aa; }
+  .page-btns { display: flex; gap: 6px; }
+  .page-btns button {
+    padding: 6px 12px;
     font-size: 12px;
+    background: rgba(255,255,255,0.06);
+    color: #a0b0c0;
+    border: 1px solid rgba(255,255,255,0.1);
   }
+  .page-btns button.active {
+    background: rgba(74,222,128,0.2);
+    color: #4ade80;
+    border-color: rgba(74,222,128,0.4);
+  }
+  .page-btns button:disabled { opacity: 0.4; }
+
+  /* 筛选栏 */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .filter-bar .form-group { margin-bottom: 0; flex: 1; min-width: 140px; }
+  .filter-bar label { font-size: 12px; color: #8899aa; }
+
+  /* 操作按钮组 */
+  .action-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+  .action-btns button { padding: 4px 8px; font-size: 11px; }
+
+  /* 提示消息 */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    max-width: 90%;
+  }
+  .toast.show { opacity: 1; }
+  .toast.success { background: rgba(74,222,128,0.95); color: #0a1628; }
+  .toast.error { background: rgba(248,113,113,0.95); color: #fff; }
+  .toast.info { background: rgba(96,165,250,0.95); color: #fff; }
+
+  /* 详情卡片 */
+  .detail-card {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 18px;
+    margin-top: 16px;
+  }
+  .detail-row {
+    display: flex;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 13px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .key { width: 140px; color: #8899aa; flex-shrink: 0; }
+  .detail-row .val { color: #e0e6ed; word-break: break-all; }
+
+  /* 导入结果 */
+  .import-result {
+    margin-top: 16px;
+    padding: 14px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    font-size: 13px;
+    display: none;
+  }
+  .import-result.show { display: block; }
+  .import-result .line { padding: 4px 0; color: #c0d0e0; }
+  .import-result .line strong { color: #4ade80; }
+
+  .hint {
+    font-size: 12px;
+    color: #7a8ba0;
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+  .hint code {
+    background: rgba(0,0,0,0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #60a5fa;
+    font-size: 11px;
+  }
+
+  /* 加载动画 */
+  .loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #4ade80;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #7a8ba0;
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
-    <h1>🍋 青柠漫剧 - 激活码管理后台</h1>
-    <p>预导入严格管理版 v3.0</p>
+    <h1>🍋 青柠漫剧 - 激活码管理系统</h1>
+    <p>云端激活码管理 · 批量导入 · 设备解绑 · 数据统计</p>
   </div>
 
-  <!-- 全局配置栏 -->
+  <!-- 配置栏 -->
   <div class="config-bar">
     <div class="form-group">
-      <label>服务器地址</label>
-      <input type="text" id="serverUrl" value="https://168-9rw.pages.dev/api" placeholder="例如：https://xxx.pages.dev/api">
+      <label>服务器地址（API）</label>
+      <input type="text" id="serverUrl" value="https://xgb.pages.dev/api" placeholder="https://你的项目名.pages.dev/api">
     </div>
     <div class="form-group">
       <label>管理密码</label>
-      <input type="password" id="adminPassword" value="orange-admin-2026">
+      <input type="password" id="adminPassword" placeholder="ADMIN_PASSWORD">
     </div>
     <div class="form-group" style="flex:0 0 auto;">
-      <button class="btn-primary" onclick="testConnection()">🔌 测试连接</button>
+      <button class="btn btn-primary" onclick="testConnection()">🔌 测试连接</button>
+      <div id="connStatus" class="conn-status" style="display:none;"></div>
     </div>
   </div>
 
+  <!-- 标签页 -->
   <div class="tabs">
-    <button class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 数据概览</button>
-    <button class="tab" data-tab="import" onclick="switchTab('import')">📥 批量导入</button>
-    <button class="tab" data-tab="list" onclick="switchTab('list')">📋 激活码列表</button>
-    <button class="tab" data-tab="single" onclick="switchTab('single')">🔍 单个操作</button>
+    <button class="tab active" onclick="switchTab('overview')">📊 数据概览</button>
+    <button class="tab" onclick="switchTab('import')">📥 批量导入</button>
+    <button class="tab" onclick="switchTab('list')">📋 激活码列表</button>
+    <button class="tab" onclick="switchTab('single')">🔍 单个操作</button>
+    <button class="tab" onclick="switchTab('tools')">🛠️ 数据工具</button>
   </div>
 
   <!-- 数据概览 -->
-  <div class="panel active" id="panel-dashboard">
-    <div class="stats" id="stats">
-      <div class="stat-card"><div class="stat-value" id="stat-total">-</div><div class="stat-label">总激活码</div></div>
-      <div class="stat-card"><div class="stat-value" id="stat-unused">-</div><div class="stat-label">未激活</div></div>
-      <div class="stat-card"><div class="stat-value" id="stat-activated">-</div><div class="stat-label">已激活</div></div>
-      <div class="stat-card"><div class="stat-value" id="stat-disabled">-</div><div class="stat-label">已禁用</div></div>
+  <div class="panel active" id="panel-overview">
+    <h2>📊 数据概览</h2>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card total"><div class="num">-</div><div class="label">激活码总数</div></div>
+      <div class="stat-card unused"><div class="num">-</div><div class="label">未激活</div></div>
+      <div class="stat-card activated"><div class="num">-</div><div class="label">已激活</div></div>
+      <div class="stat-card disabled"><div class="num">-</div><div class="label">已禁用</div></div>
+      <div class="stat-card licenses"><div class="num">-</div><div class="label">有效授权</div></div>
     </div>
     <div class="btn-group">
-      <button class="btn-primary" onclick="loadStats()">🔄 刷新数据</button>
+      <button class="btn btn-primary" onclick="loadStats()">🔄 刷新数据</button>
     </div>
-    <div class="result" id="dashboardResult"></div>
+    <div class="hint" style="margin-top:16px;">
+      数据存储在 Upstash Redis 云端数据库，更换服务器只需配置相同的环境变量即可复用全部数据。
+    </div>
   </div>
 
   <!-- 批量导入 -->
   <div class="panel" id="panel-import">
+    <h2>📥 批量导入激活码</h2>
     <div class="form-group">
-      <label>粘贴激活码（每行一个，或直接粘贴 JSON）</label>
-      <textarea id="importCodes" placeholder="FGMM-M-0001-XXXX&#10;FGMM-M-0002-XXXX&#10;..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>或上传 JSON / TXT 文件（从激活码生成器导出）</label>
-      <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-        <p>📁 点击选择文件，或拖拽到此处</p>
-        <input type="file" id="fileInput" accept=".json,.txt" style="display:none" onchange="handleFile(event)">
+      <label>粘贴激活码（每行一个）</label>
+      <textarea id="importCodes" placeholder="FGMM-M-0001-XXXX&#10;FGMM-M-0002-XXXX&#10;FGMM-Y-0001-XXXX"></textarea>
+      <div class="hint">
+        格式：<code>FGMM-类型(D天/M月/Y年)-4位序号-4位校验码</code>，使用「青柠漫剧-激活码生成器」生成。已存在的激活码会自动跳过，格式错误的会被标记为无效。
       </div>
     </div>
     <div class="btn-group">
-      <button class="btn-success" onclick="importCodes()">📥 开始导入</button>
-      <button class="btn-info" onclick="clearImport()">🗑️ 清空</button>
+      <button class="btn btn-primary" onclick="importCodes()">📥 开始导入</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('importCodes').value=''">🗑️ 清空</button>
     </div>
-    <div class="loading" id="importLoading">正在导入</div>
-    <div class="result" id="importResult"></div>
+    <div class="import-result" id="importResult"></div>
   </div>
 
   <!-- 激活码列表 -->
   <div class="panel" id="panel-list">
-    <div class="row">
+    <h2>📋 激活码列表</h2>
+    <div class="filter-bar">
       <div class="form-group">
-        <label>筛选状态</label>
+        <label>状态筛选</label>
         <select id="filterStatus" onchange="loadCodes(1)">
           <option value="">全部</option>
           <option value="unused">未激活</option>
@@ -308,414 +452,553 @@
         </select>
       </div>
       <div class="form-group">
-        <label>每页数量</label>
-        <select id="pageSize" onchange="loadCodes(1)">
-          <option value="20">20条/页</option>
-          <option value="50" selected>50条/页</option>
-          <option value="100">100条/页</option>
-        </select>
+        <label>搜索激活码</label>
+        <input type="text" id="searchCode" placeholder="输入激活码关键词" oninput="debounceSearch()">
+      </div>
+      <div class="form-group" style="flex:0 0 auto;">
+        <button class="btn btn-primary" onclick="loadCodes(1)">🔄 刷新</button>
       </div>
     </div>
-    <div class="btn-group">
-      <button class="btn-primary" onclick="loadCodes(1)">🔄 刷新列表</button>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>激活码</th>
+            <th>类型</th>
+            <th>状态</th>
+            <th>激活时间</th>
+            <th>设备绑定</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="codesTableBody">
+          <tr><td colspan="6"><div class="empty-state"><div class="icon">📭</div>暂无数据，点击刷新加载</div></td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="loading" id="listLoading">正在加载</div>
-    <div id="listContainer"></div>
-    <div class="pagination" id="pagination"></div>
+    <div class="pagination">
+      <div class="info" id="pageInfo">共 0 条</div>
+      <div class="page-btns" id="pageBtns"></div>
+    </div>
   </div>
 
   <!-- 单个操作 -->
   <div class="panel" id="panel-single">
-    <div class="form-group">
-      <label>激活码</label>
-      <input type="text" id="singleCode" placeholder="例如：FGMM-M-0001-E8D1">
+    <h2>🔍 单个激活码操作</h2>
+    <div class="row">
+      <div class="form-group" style="flex:2;">
+        <label>激活码</label>
+        <input type="text" id="singleCode" placeholder="FGMM-M-0001-XXXX">
+      </div>
+      <div class="form-group" style="flex:0 0 auto;">
+        <label>&nbsp;</label>
+        <button class="btn btn-info" onclick="queryCode()">🔍 查询状态</button>
+      </div>
     </div>
-    <div class="btn-group">
-      <button class="btn-info" onclick="queryCode()">🔍 查询状态</button>
-      <button class="btn-warning" onclick="unbindCode()">🔓 解绑设备</button>
-      <button class="btn-danger" onclick="disableCode()">🚫 禁用</button>
-      <button class="btn-success" onclick="enableCode()">✅ 启用</button>
+    <div id="singleDetail"></div>
+    <div class="btn-group" id="singleActions" style="display:none;">
+      <button class="btn btn-warning" onclick="unbindCode()">🔓 解绑设备</button>
+      <button class="btn btn-danger" onclick="disableCode()">🚫 禁用</button>
+      <button class="btn btn-primary" onclick="enableCode()">✅ 启用</button>
     </div>
-    <div class="loading" id="singleLoading">正在处理</div>
-    <div class="result" id="singleResult"></div>
   </div>
 
-  <div class="footer">
-    青柠漫剧播放器 - 激活码管理后台 v3.0 | 服务器：Cloudflare Pages Functions
+  <!-- 数据工具 -->
+  <div class="panel" id="panel-tools">
+    <h2>🛠️ 数据工具</h2>
+    <div class="form-group">
+      <label>数据同步修复</label>
+      <div class="hint">
+        当激活码列表和授权记录不同步时（例如 licenses 中有记录但 codes 中没有），使用此工具自动修复。会将 licenses 中的数据同步到 codes 中。
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-warning" onclick="fixSync()">🔧 执行数据同步修复</button>
+    </div>
+    <div id="fixResult" class="import-result"></div>
+
+    <div style="margin-top:30px;">
+      <label>导出激活码列表</label>
+      <div class="hint">导出当前所有激活码为 TXT 文件，方便备份。</div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="exportCodes()">💾 导出全部激活码</button>
+      </div>
+    </div>
+
+    <div style="margin-top:30px;">
+      <label>服务器信息</label>
+      <div id="serverInfo" class="detail-card" style="margin-top:10px;">
+        <div class="detail-row"><div class="key">状态</div><div class="val">未连接</div></div>
+      </div>
+    </div>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
+// ========== 全局状态 ==========
 let currentPage = 1;
+const pageSize = 20;
 let totalPages = 1;
+let currentCodeData = null;
+let searchTimer = null;
 
-// 获取服务器地址（统一从全局配置栏读取）
-function getServerUrl() {
-  const url = document.getElementById('serverUrl').value.trim();
-  return url.replace(/\/+$/, '');
+// ========== 工具函数 ==========
+function $(id) { return document.getElementById(id); }
+
+function showToast(msg, type = 'success') {
+  const toast = $('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show ' + type;
+  setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-function getPassword() {
-  return document.getElementById('adminPassword').value;
+function getConfig() {
+  const url = $('serverUrl').value.trim().replace(/\/+$/, '');
+  const pwd = $('adminPassword').value.trim();
+  return { url, pwd };
 }
 
-// 切换标签页
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelector('.tab[data-tab="' + tab + '"]').classList.add('active');
-  document.getElementById('panel-' + tab).classList.add('active');
-  if (tab === 'dashboard') loadStats();
-  if (tab === 'list') loadCodes(1);
+function saveConfig() {
+  localStorage.setItem('qingning_server_url', $('serverUrl').value.trim());
+  localStorage.setItem('qingning_admin_pwd', $('adminPassword').value.trim());
 }
 
-// 显示结果
-function showResult(id, type, message, data) {
-  const el = document.getElementById(id);
-  if (!el) { console.error('找不到结果元素:', id); return; }
-  el.className = 'result ' + type + ' show';
-  let html = '<strong>' + message + '</strong>';
-  if (data) {
-    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+function loadConfig() {
+  const url = localStorage.getItem('qingning_server_url');
+  const pwd = localStorage.getItem('qingning_admin_pwd');
+  if (url) $('serverUrl').value = url;
+  if (pwd) $('adminPassword').value = pwd;
+}
+
+async function apiRequest(path, options = {}) {
+  const { url, pwd } = getConfig();
+  if (!url) { showToast('请先填写服务器地址', 'error'); throw new Error('no server'); }
+  
+  const fullUrl = url + path;
+  const config = {
+    method: options.method || 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  };
+  
+  if (options.body) {
+    config.body = JSON.stringify({ ...options.body, password: pwd });
   }
-  el.innerHTML = html;
+  
+  // GET 请求带密码
+  if (config.method === 'GET' && options.includePassword !== false) {
+    const sep = fullUrl.includes('?') ? '&' : '?';
+    fullUrl = fullUrl + sep + 'password=' + encodeURIComponent(pwd);
+  }
+  
+  const res = await fetch(fullUrl, config);
+  const data = await res.json();
+  return data;
 }
 
-// 显示/隐藏加载中
-function showLoading(id, show) {
-  const el = document.getElementById(id);
-  if (el) el.classList.toggle('show', show);
+function formatTime(ts) {
+  if (!ts) return '-';
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + 
+    String(d.getMonth()+1).padStart(2,'0') + '-' + 
+    String(d.getDate()).padStart(2,'0') + ' ' +
+    String(d.getHours()).padStart(2,'0') + ':' +
+    String(d.getMinutes()).padStart(2,'0');
 }
 
-// 测试连接
+function typeName(t) {
+  return { D: '天卡', M: '月卡', Y: '年卡' }[t] || t;
+}
+
+function statusName(s) {
+  return { unused: '未激活', activated: '已激活', disabled: '已禁用' }[s] || s;
+}
+
+// ========== 标签页切换 ==========
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['overview','import','list','single','tools'][i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  $('panel-' + name).classList.add('active');
+  
+  if (name === 'overview') loadStats();
+  if (name === 'list') loadCodes(1);
+  if (name === 'tools') loadServerInfo();
+}
+
+// ========== 连接测试 ==========
 async function testConnection() {
-  const serverUrl = getServerUrl();
+  saveConfig();
+  const { url } = getConfig();
+  if (!url) { showToast('请填写服务器地址', 'error'); return; }
+  
+  const statusEl = $('connStatus');
+  statusEl.style.display = 'inline-block';
+  statusEl.className = 'conn-status';
+  statusEl.textContent = '连接中...';
+  
   try {
-    const res = await fetch(serverUrl + '/');
+    const res = await fetch(url + '/');
     const data = await res.json();
     if (data.ok) {
-      showResult('dashboardResult', 'success', '✅ 连接成功！服务器运行正常', {
-        存储: data.storage,
-        总激活码: data.stats ? data.stats.totalCodes : '-',
-        时间: data.time
-      });
-      if (data.stats) {
-        document.getElementById('stat-total').textContent = data.stats.totalCodes;
-        document.getElementById('stat-unused').textContent = data.stats.unused;
-        document.getElementById('stat-activated').textContent = data.stats.activated;
-        document.getElementById('stat-disabled').textContent = data.stats.disabled;
-      }
+      statusEl.className = 'conn-status ok';
+      statusEl.textContent = '✅ 连接成功';
+      showToast('连接成功！数据库：' + (data.storage || '未知'));
+      loadStats();
     } else {
-      showResult('dashboardResult', 'error', '❌ 连接失败：' + (data.msg || '未知错误'));
+      statusEl.className = 'conn-status fail';
+      statusEl.textContent = '❌ 连接失败';
+      showToast('连接失败：' + (data.msg || '未知错误'), 'error');
     }
   } catch (e) {
-    showResult('dashboardResult', 'error', '❌ 网络错误：' + e.message + '<br>请检查服务器地址是否正确');
+    statusEl.className = 'conn-status fail';
+    statusEl.textContent = '❌ 连接失败';
+    showToast('连接失败：' + e.message, 'error');
   }
 }
 
 // ========== 数据概览 ==========
 async function loadStats() {
-  const serverUrl = getServerUrl();
   try {
-    const res = await fetch(serverUrl + '/');
+    const { url } = getConfig();
+    if (!url) return;
+    const res = await fetch(url + '/');
     const data = await res.json();
-    if (data.stats) {
-      document.getElementById('stat-total').textContent = data.stats.totalCodes;
-      document.getElementById('stat-unused').textContent = data.stats.unused;
-      document.getElementById('stat-activated').textContent = data.stats.activated;
-      document.getElementById('stat-disabled').textContent = data.stats.disabled;
+    if (data.ok && data.stats) {
+      const s = data.stats;
+      document.querySelector('.stat-card.total .num').textContent = s.totalCodes || 0;
+      document.querySelector('.stat-card.unused .num').textContent = s.unused || 0;
+      document.querySelector('.stat-card.activated .num').textContent = s.activated || 0;
+      document.querySelector('.stat-card.disabled .num').textContent = s.disabled || 0;
+      document.querySelector('.stat-card.licenses .num').textContent = s.activeLicenses || 0;
     }
   } catch (e) {
-    console.error('加载统计失败:', e);
+    console.error('加载统计失败', e);
   }
 }
 
 // ========== 批量导入 ==========
-function handleFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const content = e.target.result;
-    try {
-      const data = JSON.parse(content);
-      if (data.codes && Array.isArray(data.codes)) {
-        document.getElementById('importCodes').value = data.codes.join('\n');
-        alert('已读取 ' + data.codes.length + ' 个激活码');
-      } else if (Array.isArray(data)) {
-        document.getElementById('importCodes').value = data.join('\n');
-        alert('已读取 ' + data.length + ' 个激活码');
-      } else {
-        alert('JSON 格式不正确，需要包含 codes 数组');
-      }
-    } catch (err) {
-      // 不是 JSON，当纯文本处理
-      document.getElementById('importCodes').value = content;
-      const lines = content.split('\n').filter(l => l.trim()).length;
-      alert('已读取 ' + lines + ' 行文本');
-    }
-  };
-  reader.readAsText(file);
-}
-
 async function importCodes() {
-  const serverUrl = getServerUrl();
-  const password = getPassword();
-  const text = document.getElementById('importCodes').value.trim();
-
-  if (!text) {
-    alert('请输入激活码或上传文件');
-    return;
-  }
-
-  let codes = [];
+  const text = $('importCodes').value.trim();
+  if (!text) { showToast('请先粘贴激活码', 'error'); return; }
+  
+  const codes = text.split('\n').map(l => l.trim()).filter(l => l);
+  if (codes.length === 0) { showToast('没有有效的激活码', 'error'); return; }
+  
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading"></span>导入中...';
+  
   try {
-    const data = JSON.parse(text);
-    if (data.codes && Array.isArray(data.codes)) {
-      codes = data.codes;
-    } else if (Array.isArray(data)) {
-      codes = data;
-    } else {
-      alert('JSON 格式不正确，需要包含 codes 数组');
-      return;
-    }
-  } catch (e) {
-    codes = text.split('\n').map(c => c.trim()).filter(c => c);
-  }
-
-  if (codes.length === 0) {
-    alert('没有有效的激活码');
-    return;
-  }
-
-  showLoading('importLoading', true);
-  showResult('importResult', 'info', '正在导入 ' + codes.length + ' 个激活码，请稍候...');
-
-  try {
-    const res = await fetch(serverUrl + '/admin/import', {
+    const data = await apiRequest('/admin/import', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ codes, password })
+      body: { codes }
     });
-    const data = await res.json();
+    
+    const resultEl = $('importResult');
+    resultEl.classList.add('show');
     if (data.ok) {
-      showResult('importResult', 'success', '✅ ' + data.msg, data.stats);
+      resultEl.innerHTML = `
+        <div class="line">✅ <strong>导入完成</strong></div>
+        <div class="line">成功导入：<strong>${data.stats.imported}</strong> 个</div>
+        <div class="line">跳过（已存在）：<strong>${data.stats.skipped}</strong> 个</div>
+        <div class="line">无效（格式错误）：<strong>${data.stats.invalid}</strong> 个</div>
+        <div class="line">数据库总数：<strong>${data.stats.total}</strong> 个</div>
+      `;
+      showToast(`导入成功：${data.stats.imported}个`);
       loadStats();
     } else {
-      showResult('importResult', 'error', '❌ ' + (data.msg || '导入失败'), data);
+      resultEl.innerHTML = `<div class="line" style="color:#f87171;">❌ ${data.msg || '导入失败'}</div>`;
+      showToast(data.msg || '导入失败', 'error');
     }
   } catch (e) {
-    showResult('importResult', 'error', '❌ 网络错误：' + e.message);
+    showToast('导入失败：' + e.message, 'error');
   } finally {
-    showLoading('importLoading', false);
+    btn.disabled = false;
+    btn.textContent = '📥 开始导入';
   }
-}
-
-function clearImport() {
-  document.getElementById('importCodes').value = '';
-  document.getElementById('fileInput').value = '';
-  document.getElementById('importResult').classList.remove('show');
 }
 
 // ========== 激活码列表 ==========
-async function loadCodes(page) {
+async function loadCodes(page = 1) {
   currentPage = page;
-  const serverUrl = getServerUrl();
-  const password = getPassword();
-  const status = document.getElementById('filterStatus').value;
-  const pageSize = document.getElementById('pageSize').value;
-
-  showLoading('listLoading', true);
-  document.getElementById('listContainer').innerHTML = '';
-  document.getElementById('pagination').innerHTML = '';
-
+  const status = $('filterStatus').value;
+  const search = $('searchCode').value.trim();
+  
+  const { url, pwd } = getConfig();
+  if (!url) { showToast('请先填写服务器地址', 'error'); return; }
+  
+  let path = `/admin/codes?password=${encodeURIComponent(pwd)}&page=${page}&pageSize=${pageSize}`;
+  if (status) path += '&status=' + status;
+  
+  const tbody = $('codesTableBody');
+  tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="loading"></span> 加载中...</div></td></tr>';
+  
   try {
-    let url = serverUrl + '/admin/codes?password=' + encodeURIComponent(password) + '&page=' + page + '&pageSize=' + pageSize;
-    if (status) url += '&status=' + status;
-    const res = await fetch(url);
+    const res = await fetch(url + path);
     const data = await res.json();
-
-    if (data.ok && data.codes) {
-      if (data.codes.length === 0) {
-        document.getElementById('listContainer').innerHTML = '<div class="empty-tip">暂无激活码数据</div>';
-      } else {
-        totalPages = data.totalPages;
-        let html = '<div class="table-wrap"><table><thead><tr><th>激活码</th><th>类型</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
-        for (const code of data.codes) {
-          const statusBadge = code.status === 'unused' ? '<span class="badge badge-unused">未激活</span>' :
-                             code.status === 'activated' ? '<span class="badge badge-activated">已激活</span>' :
-                             '<span class="badge badge-disabled">已禁用</span>';
-          const typeName = code.cardType === 'D' ? '天卡' : code.cardType === 'Y' ? '年卡' : '月卡';
-          const createdAt = code.createdAt ? new Date(code.createdAt).toLocaleString('zh-CN') : '-';
-          html += '<tr>' +
-            '<td><code>' + code.code + '</code></td>' +
-            '<td>' + typeName + '</td>' +
-            '<td>' + statusBadge + '</td>' +
-            '<td>' + createdAt + '</td>' +
-            '<td>' +
-              '<button class="btn-warning btn-small" onclick="quickUnbind(\'' + code.code + '\')">解绑</button> ' +
-              (code.status === 'disabled' ?
-                '<button class="btn-success btn-small" onclick="quickEnable(\'' + code.code + '\')">启用</button>' :
-                '<button class="btn-danger btn-small" onclick="quickDisable(\'' + code.code + '\')">禁用</button>') +
-            '</td>' +
-          '</tr>';
-        }
-        html += '</tbody></table></div>';
-        document.getElementById('listContainer').innerHTML = html;
-
-        // 分页
-        let pagHtml = '<button class="btn-info" onclick="loadCodes(' + Math.max(1, currentPage - 1) + ')" ' + (currentPage <= 1 ? 'disabled' : '') + '>上一页</button>';
-        pagHtml += '<span>第 ' + currentPage + ' / ' + totalPages + ' 页（共 ' + data.total + ' 条）</span>';
-        pagHtml += '<button class="btn-info" onclick="loadCodes(' + Math.min(totalPages, currentPage + 1) + ')" ' + (currentPage >= totalPages ? 'disabled' : '') + '>下一页</button>';
-        document.getElementById('pagination').innerHTML = pagHtml;
-      }
-    } else {
-      document.getElementById('listContainer').innerHTML = '<div class="empty-tip" style="color:red">❌ ' + (data.msg || '加载失败') + '</div>';
+    
+    if (!data.ok) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">⚠️</div>${data.msg || '加载失败'}</div></td></tr>`;
+      return;
     }
+    
+    let list = data.codes || [];
+    // 前端搜索过滤
+    if (search) {
+      list = list.filter(c => c.code.toLowerCase().includes(search.toLowerCase()));
+    }
+    
+    totalPages = data.totalPages || 1;
+    
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">📭</div>暂无数据</div></td></tr>';
+    } else {
+      tbody.innerHTML = list.map(c => `
+        <tr>
+          <td class="code-text">${c.code}</td>
+          <td><span class="badge type-${c.cardType}">${typeName(c.cardType)}</span></td>
+          <td><span class="badge ${c.status}">${statusName(c.status)}</span></td>
+          <td>${formatTime(c.activatedAt)}</td>
+          <td style="font-size:11px;color:#8899aa;max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="${c.deviceFingerprint || '-'}">${c.deviceFingerprint ? '已绑定' : '-'}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-info btn-sm" onclick="quickQuery('${c.code}')">查看</button>
+              ${c.deviceFingerprint ? `<button class="btn btn-warning btn-sm" onclick="quickUnbind('${c.code}')">解绑</button>` : ''}
+              ${c.status === 'disabled' 
+                ? `<button class="btn btn-primary btn-sm" onclick="quickEnable('${c.code}')">启用</button>`
+                : `<button class="btn btn-danger btn-sm" onclick="quickDisable('${c.code}')">禁用</button>`}
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    $('pageInfo').textContent = `共 ${data.total || 0} 条，第 ${page}/${totalPages} 页`;
+    renderPagination();
   } catch (e) {
-    document.getElementById('listContainer').innerHTML = '<div class="empty-tip" style="color:red">❌ 网络错误：' + e.message + '</div>';
-  } finally {
-    showLoading('listLoading', false);
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">⚠️</div>加载失败：${e.message}</div></td></tr>`;
   }
 }
 
+function renderPagination() {
+  const container = $('pageBtns');
+  let html = `<button onclick="loadCodes(${currentPage-1})" ${currentPage<=1?'disabled':''}>上一页</button>`;
+  
+  const maxShow = 5;
+  let start = Math.max(1, currentPage - 2);
+  let end = Math.min(totalPages, start + maxShow - 1);
+  if (end - start < maxShow - 1) start = Math.max(1, end - maxShow + 1);
+  
+  for (let i = start; i <= end; i++) {
+    html += `<button class="${i===currentPage?'active':''}" onclick="loadCodes(${i})">${i}</button>`;
+  }
+  
+  html += `<button onclick="loadCodes(${currentPage+1})" ${currentPage>=totalPages?'disabled':''}>下一页</button>`;
+  container.innerHTML = html;
+}
+
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadCodes(1), 300);
+}
+
+// ========== 快速操作（列表中） ==========
+function quickQuery(code) {
+  $('singleCode').value = code;
+  switchTab('single');
+  queryCode();
+}
+
 async function quickUnbind(code) {
-  if (!confirm('确定要解绑激活码 ' + code + ' 吗？\n解绑后用户可在新设备重新激活，保留剩余时间。')) return;
-  document.getElementById('singleCode').value = code;
-  await unbindCode();
-  loadCodes(currentPage);
+  if (!confirm(`确定解绑激活码 ${code} 吗？\n解绑后用户可在新设备重新激活，剩余天数保留。`)) return;
+  try {
+    const data = await apiRequest('/admin/unbind', { method: 'POST', body: { code } });
+    if (data.ok) {
+      showToast(`解绑成功，剩余${data.remainingDays || 0}天`);
+      loadCodes(currentPage);
+      loadStats();
+    } else {
+      showToast(data.msg || '解绑失败', 'error');
+    }
+  } catch (e) {
+    showToast('解绑失败：' + e.message, 'error');
+  }
 }
 
 async function quickDisable(code) {
-  if (!confirm('确定要禁用激活码 ' + code + ' 吗？\n禁用后用户无法使用。')) return;
-  document.getElementById('singleCode').value = code;
-  await disableCode();
-  loadCodes(currentPage);
+  if (!confirm(`确定禁用激活码 ${code} 吗？`)) return;
+  try {
+    const data = await apiRequest('/admin/disable', { method: 'POST', body: { code } });
+    if (data.ok) { showToast('已禁用'); loadCodes(currentPage); loadStats(); }
+    else showToast(data.msg || '操作失败', 'error');
+  } catch (e) { showToast('操作失败：' + e.message, 'error'); }
 }
 
 async function quickEnable(code) {
-  if (!confirm('确定要启用激活码 ' + code + ' 吗？')) return;
-  document.getElementById('singleCode').value = code;
-  await enableCode();
-  loadCodes(currentPage);
+  try {
+    const data = await apiRequest('/admin/enable', { method: 'POST', body: { code } });
+    if (data.ok) { showToast('已启用'); loadCodes(currentPage); loadStats(); }
+    else showToast(data.msg || '操作失败', 'error');
+  } catch (e) { showToast('操作失败：' + e.message, 'error'); }
 }
 
 // ========== 单个操作 ==========
 async function queryCode() {
-  const serverUrl = getServerUrl();
-  const code = document.getElementById('singleCode').value.trim();
-  if (!code) { alert('请输入激活码'); return; }
-  showLoading('singleLoading', true);
-  document.getElementById('singleResult').classList.remove('show');
+  const code = $('singleCode').value.trim();
+  if (!code) { showToast('请输入激活码', 'error'); return; }
+  
+  const { url } = getConfig();
+  if (!url) { showToast('请先填写服务器地址', 'error'); return; }
+  
+  $('singleDetail').innerHTML = '<div style="padding:20px;text-align:center;"><span class="loading"></span> 查询中...</div>';
+  
   try {
-    const res = await fetch(serverUrl + '/status/' + encodeURIComponent(code));
+    // 先查公开状态
+    const res = await fetch(url + '/status/' + encodeURIComponent(code));
     const data = await res.json();
-    if (data.ok) {
-      let msg = '✅ 查询成功\n';
-      msg += '激活码：' + data.code + '\n';
-      msg += '状态：' + (data.status === 'unused' ? '未激活' : data.status === 'activated' ? '已激活' : data.status === 'disabled' ? '已禁用' : data.status) + '\n';
-      msg += '类型：' + (data.cardType === 'D' ? '天卡' : data.cardType === 'Y' ? '年卡' : '月卡') + '\n';
-      if (data.activatedAt) msg += '激活时间：' + new Date(data.activatedAt).toLocaleString('zh-CN') + '\n';
-      if (data.expireAt) msg += '到期时间：' + new Date(data.expireAt).toLocaleString('zh-CN') + '\n';
-      if (data.expired !== undefined) msg += '是否过期：' + (data.expired ? '是' : '否') + '\n';
-      if (data.deviceBound) msg += '设备状态：' + data.deviceBound + '\n';
-      showResult('singleResult', 'info', msg, data);
-    } else {
-      showResult('singleResult', 'error', '❌ ' + (data.msg || '查询失败'), data);
+    
+    if (!data.ok) {
+      $('singleDetail').innerHTML = `<div class="detail-card"><div class="detail-row"><div class="key">状态</div><div class="val" style="color:#f87171;">❌ ${data.msg || '激活码不存在'}</div></div></div>`;
+      $('singleActions').style.display = 'none';
+      return;
     }
+    
+    currentCodeData = data;
+    const expireAt = data.expireAt ? new Date(data.expireAt) : null;
+    const remainDays = expireAt ? Math.max(0, Math.ceil((expireAt - Date.now()) / 86400000)) : 0;
+    
+    $('singleDetail').innerHTML = `
+      <div class="detail-card">
+        <div class="detail-row"><div class="key">激活码</div><div class="val code-text">${data.code}</div></div>
+        <div class="detail-row"><div class="key">卡类型</div><div class="val"><span class="badge type-${data.cardType}">${typeName(data.cardType)}</span></div></div>
+        <div class="detail-row"><div class="key">状态</div><div class="val"><span class="badge ${data.status}">${statusName(data.status)}</span></div></div>
+        <div class="detail-row"><div class="key">创建时间</div><div class="val">${formatTime(data.createdAt)}</div></div>
+        <div class="detail-row"><div class="key">激活时间</div><div class="val">${formatTime(data.activatedAt)}</div></div>
+        <div class="detail-row"><div class="key">有效期</div><div class="val">${data.days || 0} 天</div></div>
+        <div class="detail-row"><div class="key">到期时间</div><div class="val" style="color:${data.expired?'#f87171':'#4ade80'};">${expireAt ? formatTime(data.expireAt) + (data.expired ? '（已过期）' : `（剩余${remainDays}天）`) : '-'}</div></div>
+        <div class="detail-row"><div class="key">设备绑定</div><div class="val">${data.deviceBound || '未绑定'}</div></div>
+      </div>
+    `;
+    $('singleActions').style.display = 'flex';
   } catch (e) {
-    showResult('singleResult', 'error', '❌ 网络错误：' + e.message);
-  } finally {
-    showLoading('singleLoading', false);
+    $('singleDetail').innerHTML = `<div class="detail-card"><div class="detail-row"><div class="key">错误</div><div class="val" style="color:#f87171;">${e.message}</div></div></div>`;
   }
 }
 
 async function unbindCode() {
-  const serverUrl = getServerUrl();
-  const password = getPassword();
-  const code = document.getElementById('singleCode').value.trim();
-  if (!code) { alert('请输入激活码'); return; }
-  if (!confirm('确定要解绑激活码 ' + code + ' 吗？\n解绑后用户可在新设备重新激活，保留剩余时间。')) return;
-  showLoading('singleLoading', true);
-  document.getElementById('singleResult').classList.remove('show');
-  try {
-    const res = await fetch(serverUrl + '/admin/unbind', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, password })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      showResult('singleResult', 'success', '✅ ' + data.msg, data);
-      loadStats();
-    } else {
-      showResult('singleResult', 'error', '❌ ' + (data.msg || '解绑失败'), data);
-    }
-  } catch (e) {
-    showResult('singleResult', 'error', '❌ 网络错误：' + e.message);
-  } finally {
-    showLoading('singleLoading', false);
-  }
+  const code = $('singleCode').value.trim();
+  if (!code) return;
+  if (!confirm(`确定解绑激活码 ${code} 吗？`)) return;
+  await quickUnbind(code);
+  queryCode();
 }
 
 async function disableCode() {
-  const serverUrl = getServerUrl();
-  const password = getPassword();
-  const code = document.getElementById('singleCode').value.trim();
-  if (!code) { alert('请输入激活码'); return; }
-  if (!confirm('确定要禁用激活码 ' + code + ' 吗？\n禁用后用户无法使用。')) return;
-  showLoading('singleLoading', true);
-  document.getElementById('singleResult').classList.remove('show');
-  try {
-    const res = await fetch(serverUrl + '/admin/disable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, password })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      showResult('singleResult', 'success', '✅ ' + data.msg, data);
-      loadStats();
-    } else {
-      showResult('singleResult', 'error', '❌ ' + (data.msg || '禁用失败'), data);
-    }
-  } catch (e) {
-    showResult('singleResult', 'error', '❌ 网络错误：' + e.message);
-  } finally {
-    showLoading('singleLoading', false);
-  }
+  const code = $('singleCode').value.trim();
+  if (!code) return;
+  if (!confirm(`确定禁用激活码 ${code} 吗？`)) return;
+  await quickDisable(code);
+  queryCode();
 }
 
 async function enableCode() {
-  const serverUrl = getServerUrl();
-  const password = getPassword();
-  const code = document.getElementById('singleCode').value.trim();
-  if (!code) { alert('请输入激活码'); return; }
-  showLoading('singleLoading', true);
-  document.getElementById('singleResult').classList.remove('show');
+  const code = $('singleCode').value.trim();
+  if (!code) return;
+  await quickEnable(code);
+  queryCode();
+}
+
+// ========== 数据工具 ==========
+async function fixSync() {
+  if (!confirm('确定执行数据同步修复吗？\n这会将授权记录中的数据同步到激活码列表中。')) return;
   try {
-    const res = await fetch(serverUrl + '/admin/enable', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, password })
-    });
-    const data = await res.json();
+    const data = await apiRequest('/admin/fix-sync', { method: 'POST', body: {} });
+    const resultEl = $('fixResult');
+    resultEl.classList.add('show');
     if (data.ok) {
-      showResult('singleResult', 'success', '✅ ' + data.msg, data);
+      resultEl.innerHTML = `
+        <div class="line">✅ <strong>修复完成</strong></div>
+        <div class="line">修复了 <strong>${data.fixed}</strong> 个激活码</div>
+        <div class="line">激活码总数：<strong>${data.totalCodes}</strong></div>
+        <div class="line">授权记录总数：<strong>${data.totalLicenses}</strong></div>
+      `;
+      showToast(`修复完成，修复了${data.fixed}个`);
       loadStats();
     } else {
-      showResult('singleResult', 'error', '❌ ' + (data.msg || '启用失败'), data);
+      resultEl.innerHTML = `<div class="line" style="color:#f87171;">❌ ${data.msg || '修复失败'}</div>`;
+      showToast(data.msg || '修复失败', 'error');
     }
   } catch (e) {
-    showResult('singleResult', 'error', '❌ 网络错误：' + e.message);
-  } finally {
-    showLoading('singleLoading', false);
+    showToast('修复失败：' + e.message, 'error');
   }
 }
 
-// 页面加载时加载数据
+async function exportCodes() {
+  const { url, pwd } = getConfig();
+  if (!url) { showToast('请先填写服务器地址', 'error'); return; }
+  
+  showToast('正在导出...', 'info');
+  try {
+    // 获取所有页
+    let allCodes = [];
+    let page = 1;
+    while (true) {
+      const res = await fetch(url + `/admin/codes?password=${encodeURIComponent(pwd)}&page=${page}&pageSize=100`);
+      const data = await res.json();
+      if (!data.ok || !data.codes || data.codes.length === 0) break;
+      allCodes = allCodes.concat(data.codes);
+      if (page >= data.totalPages) break;
+      page++;
+    }
+    
+    const text = allCodes.map(c => 
+      `${c.code}\t${typeName(c.cardType)}\t${statusName(c.status)}\t${c.activatedAt ? formatTime(c.activatedAt) : '-'}`
+    ).join('\n');
+    
+    const header = '激活码\t类型\t状态\t激活时间\n';
+    const blob = new Blob([header + text], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `青柠漫剧激活码列表_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast(`已导出 ${allCodes.length} 个激活码`);
+  } catch (e) {
+    showToast('导出失败：' + e.message, 'error');
+  }
+}
+
+async function loadServerInfo() {
+  const { url } = getConfig();
+  if (!url) return;
+  try {
+    const res = await fetch(url + '/');
+    const data = await res.json();
+    if (data.ok) {
+      $('serverInfo').innerHTML = `
+        <div class="detail-row"><div class="key">状态</div><div class="val" style="color:#4ade80;">✅ 运行中</div></div>
+        <div class="detail-row"><div class="key">消息</div><div class="val">${data.msg || '-'}</div></div>
+        <div class="detail-row"><div class="key">存储</div><div class="val">${data.storage || '-'}</div></div>
+        <div class="detail-row"><div class="key">服务器时间</div><div class="val">${formatTime(new Date(data.time).getTime())}</div></div>
+        <div class="detail-row"><div class="key">激活码总数</div><div class="val">${data.stats?.totalCodes || 0}</div></div>
+        <div class="detail-row"><div class="key">有效授权</div><div class="val">${data.stats?.activeLicenses || 0}</div></div>
+      `;
+    }
+  } catch (e) {
+    $('serverInfo').innerHTML = `<div class="detail-row"><div class="key">状态</div><div class="val" style="color:#f87171;">❌ 连接失败：${e.message}</div></div>`;
+  }
+}
+
+// ========== 初始化 ==========
 window.onload = function() {
-  loadStats();
+  loadConfig();
+  // 如果有保存的配置，自动加载统计
+  if (localStorage.getItem('qingning_server_url')) {
+    loadStats();
+  }
 };
 </script>
 </body>
