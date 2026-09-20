@@ -1044,6 +1044,7 @@
     }
   }
   function openSettings() {
+    try {
     els.setSeriesName.value = state.seriesName;
     els.setEpCount.value = state.totalEpisodes;
     els.setColor.value = state.accentColor;
@@ -1060,9 +1061,14 @@
     els.setEpTitle.value = (state.eps[state.currentEp] && state.eps[state.currentEp].title) || '';
     updateLicenseInfo();
     els.modalSettings.hidden = false;
+    } catch (e) {
+      console.error('打开设置出错：', e);
+      alert('打开设置出错：' + e.message);
+    }
   }
 
   function saveSettings() {
+    try {
     state.seriesName = els.setSeriesName.value.trim() || '智能播放器';
     state.totalEpisodes = Math.max(1, Math.min(999, parseInt(els.setEpCount.value, 10) || 1));
     state.accentColor = els.setColor.value;
@@ -1097,6 +1103,10 @@
     if (els.durTime) els.durTime.textContent = fmtTime(getEffectiveDuration());
     saveState();
     els.modalSettings.hidden = true;
+    } catch (e) {
+      console.error('保存设置出错：', e);
+      alert('保存设置出错：' + e.message);
+    }
   }
 
   function applyRatio() {
