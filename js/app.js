@@ -574,7 +574,7 @@
      'btnNext','btnFull','btnEpToggle','epMask','btnEpClose',
      'btnMore','moreMenu','mmLoop','mmLoopSwitch','mmDanmaku','mmDanmakuSwitch',
      'epList','episodePanel','btnEpSet','btnEpImport','hintBar','videoZoomWrap','posterZoomWrap','btnClearAll',
-     'modalSettings','setSeriesName','setEpCount','setEpTitle','setColor','colorPreview','setRatio','setSpeed','setCustomDuration','setShowPauseIcon','setEpDisplayMode','setDanmakuInput','setDanmakuMode','setLicenseServerEnabled','setLicenseServer','btnSaveSettings','licenseInfo',
+     'modalSettings','setSeriesName','setEpCount','setEpTitle','btnGenAllTitles','setColor','colorPreview','setRatio','setSpeed','setCustomDuration','setShowPauseIcon','setEpDisplayMode','setDanmakuInput','setDanmakuMode','setLicenseServerEnabled','setLicenseServer','btnSaveSettings','licenseInfo',
      'modalNetwork','netUrl','netEp','netTip','btnNetClear','btnNetSave',
      'modalEpSet','quickEpCount','btnQuickEpSave','fileVideo','fileImage','brandDot','videoStage',
      'convertTip','btnConvert','activateMask','actCode','btnActivate','actMsg','actExp','actRemember',
@@ -927,7 +927,9 @@
       e.stopPropagation();
       toggleEpisodePanel();
     });
-    els.epMask.addEventListener('click', () => closeEpisodePanel());
+    els.epMask.addEventListener('click', (e) => { e.stopPropagation(); closeEpisodePanel(); });
+    // 选集面板内部点击不冒泡到视频区域，避免触发播放/暂停
+    if (els.episodePanel) els.episodePanel.addEventListener('click', (e) => e.stopPropagation());
     els.btnEpClose.addEventListener('click', (e) => {
       e.stopPropagation();
       closeEpisodePanel();
@@ -946,6 +948,21 @@
     // 设置
     $('btnSettings').addEventListener('click', openSettings);
     els.btnSaveSettings.addEventListener('click', saveSettings);
+    // 一键生成所有集标题
+    if (els.btnGenAllTitles) {
+      els.btnGenAllTitles.addEventListener('click', () => {
+        const name = (els.setSeriesName?.value || '').trim() || state.seriesName;
+        const count = Math.max(1, Math.min(999, parseInt(els.setEpCount?.value, 10) || state.totalEpisodes));
+        if (!confirm('确定要为全部 ' + count + ' 集生成标题吗？\n格式：' + name + '·第N集\n（已有的自定义标题会被覆盖）')) return;
+        for (let i = 1; i <= count; i++) {
+          if (!state.eps[i]) state.eps[i] = {};
+          state.eps[i].title = name + '·第' + i + '集';
+        }
+        saveState();
+        renderEpisodeList();
+        alert('已成功生成 ' + count + ' 集的标题！\n点击保存设置后生效。');
+      });
+    }
     els.setColor.addEventListener('input', () => {
       els.colorPreview.textContent = els.setColor.value;
       document.documentElement.style.setProperty('--accent', els.setColor.value);
