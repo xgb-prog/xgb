@@ -255,19 +255,22 @@
   /* ---------- 选集面板开关 ---------- */
   function openEpisodePanel() {
     els.episodePanel.classList.add('show');
-    els.epMask.hidden = false;
+    els.epMask.classList.add('show');
     showControls();
     // 更新导入按钮显示当前集数
     if (els.btnEpImport) els.btnEpImport.textContent = '第' + state.currentEp + '集';
-    // 滚动到当前集
+    // 滚动到当前集（手动计算 scrollTop，避免 scrollIntoView 影响外层页面）
     setTimeout(() => {
       const activeItem = els.epList.querySelector('.ep-item.active');
-      if (activeItem) activeItem.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (activeItem && els.epList) {
+        const target = activeItem.offsetTop - (els.epList.clientHeight / 2) + (activeItem.offsetHeight / 2);
+        els.epList.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+      }
     }, 100);
   }
   function closeEpisodePanel() {
     els.episodePanel.classList.remove('show');
-    els.epMask.hidden = true;
+    els.epMask.classList.remove('show');
     showControls(); // 重置控制栏隐藏计时器
   }
   function toggleEpisodePanel() {
@@ -809,7 +812,7 @@
       // 选集面板已在 videoStage 内，无需移动 DOM
       if (isFs) {
         els.episodePanel.classList.remove('show');
-        els.epMask.hidden = true;
+        els.epMask.classList.remove('show');
       }
     }
     function toggleFullscreen() {
@@ -1407,15 +1410,26 @@
           const dist = getDist(e.touches);
           currentScale = Math.max(0.3, Math.min(5, pinchStartScale * (dist / pinchStartDist)));
           applyTransform();
-        } else if (e.touches.length === 1) {
-          e.preventDefault();
-          currentTx = panStartTx + (e.touches[0].clientX - panStartX);
-          currentTy = panStartTy + (e.touches[0].clientY - panStartY);
-          applyTransform();
+        } else if (e.touches.length === 1 && currentScale > 1.01) {
+          // 只有视频被放大后才允许单指平移，未缩放时点击按钮的微小移动不会导致视频偏移
+          const dx = e.touches[0].clientX - panStartX;
+          const dy = e.touches[0].clientY - panStartY;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            e.preventDefault();
+            currentTx = panStartTx + dx;
+            currentTy = panStartTy + dy;
+            applyTransform();
+          }
         }
       }, { passive: false });
       els.videoZoomWrap.addEventListener('touchend', (e) => {
-        if (e.touches.length === 0) pinchStartDist = 0;
+        if (e.touches.length === 0) {
+          pinchStartDist = 0;
+          // 触摸结束后如果缩放回到1以下，自动重置平移位置
+          if (currentScale <= 1.01) {
+            currentScale = 1; currentTx = 0; currentTy = 0; applyTransform();
+          }
+        }
       });
       // 双击重置缩放
       let lastTap = 0;
@@ -1456,15 +1470,22 @@
           const dist = pGetDist(e.touches);
           pScale = Math.max(0.3, Math.min(5, pPinchStartScale * (dist / pPinchStartDist)));
           pApply();
-        } else if (e.touches.length === 1) {
-          e.preventDefault();
-          pTx = pPanStartTx + (e.touches[0].clientX - pPanStartX);
-          pTy = pPanStartTy + (e.touches[0].clientY - pPanStartY);
-          pApply();
+        } else if (e.touches.length === 1 && pScale > 1.01) {
+          const dx = e.touches[0].clientX - pPanStartX;
+          const dy = e.touches[0].clientY - pPanStartY;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            e.preventDefault();
+            pTx = pPanStartTx + dx;
+            pTy = pPanStartTy + dy;
+            pApply();
+          }
         }
       }, { passive: false });
       els.posterZoomWrap.addEventListener('touchend', (e) => {
-        if (e.touches.length === 0) pPinchStartDist = 0;
+        if (e.touches.length === 0) {
+          pPinchStartDist = 0;
+          if (pScale <= 1.01) { pScale = 1; pTx = 0; pTy = 0; pApply(); }
+        }
       });
       // 双击重置封面缩放
       let pLastTap = 0;
