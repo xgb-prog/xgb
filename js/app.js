@@ -495,7 +495,7 @@
      'btnNext','btnFull','btnEpToggle','epMask','btnEpClose',
      'btnMore','moreMenu','mmLoop','mmLoopSwitch','mmDanmaku','mmDanmakuSwitch',
      'epList','episodePanel','btnEpSet','btnEpImport','hintBar','videoZoomWrap','posterZoomWrap','btnClearAll',
-     'modalSettings','setSeriesName','setEpCount','setEpTitle','setColor','colorPreview','setRatio','setSpeed','setShowPauseIcon','setEpDisplayMode','setDanmakuInput','setDanmakuMode','setLicenseServerEnabled','setLicenseServer','btnSaveSettings','licenseInfo','btnOpenActivate',
+     'modalSettings','setSeriesName','setEpCount','setEpTitle','setColor','colorPreview','setRatio','setSpeed','setShowPauseIcon','setEpDisplayMode','setDanmakuInput','setDanmakuMode','setLicenseServerEnabled','setLicenseServer','btnSaveSettings','licenseInfo',
      'modalNetwork','netUrl','netEp','netTip','btnNetClear','btnNetSave',
      'modalEpSet','quickEpCount','btnQuickEpSave','fileVideo','fileImage','brandDot','videoStage',
      'convertTip','btnConvert','activateMask','actCode','btnActivate','actMsg','actExp','actRemember',
@@ -578,8 +578,6 @@
     applyDanmakuInputVisibility();
     // 播放当前集
     await playEpisode(state.currentEp);
-    // 检查激活状态，未激活则弹出激活界面
-    await checkActivation();
   }
 
   /* ---------- 事件绑定 ---------- */
@@ -862,11 +860,6 @@
     // 设置
     $('btnSettings').addEventListener('click', openSettings);
     els.btnSaveSettings.addEventListener('click', saveSettings);
-    if (els.btnOpenActivate) els.btnOpenActivate.addEventListener('click', () => {
-      els.activateMask.hidden = false;
-      if (els.actMsg) { els.actMsg.textContent = ''; els.actMsg.className = ''; }
-      if (els.actCode) els.actCode.focus();
-    });
     els.setColor.addEventListener('input', () => {
       els.colorPreview.textContent = els.setColor.value;
       document.documentElement.style.setProperty('--accent', els.setColor.value);
@@ -1260,6 +1253,8 @@
       const typeName = days === 1 ? '试用卡' : (days >= 365 ? '年卡' : '月卡');
       const remainDays = Math.ceil((expireAt - Date.now()) / (24 * 3600 * 1000));
       if (els.actExp) els.actExp.textContent = '已激活（' + typeName + '），剩余 ' + remainDays + ' 天，到期：' + fmtExpDate(expireAt);
+      // 同步更新设置页面的激活状态
+      updateLicenseInfo();
     } else {
       els.actMsg.textContent = '服务端验证未启用，无法激活';
       els.actMsg.className = 'err';
