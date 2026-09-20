@@ -1,0 +1,36 @@
+{
+  "name": "青柠漫剧播放器",
+  "short_name": "青柠漫剧",
+  "description": "支持本地视频导入、选集、倍速、网盘链接播放的青柠漫剧播放器",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#12121a",
+  "theme_color": "#12121a",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["entertainment", "video", "media"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "prefer_related_applications": false
+}
