@@ -215,14 +215,17 @@ html, body {
 .c-btn svg path { stroke: currentColor; }
 .c-btn.active { color: var(--accent); }
 
-/* 橙色暂停按钮（视频中播放器风格） */
+/* 透明播放按钮（极简风格） */
 .play-btn {
-  background: var(--play-orange);
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   width: 34px; height: 34px;
   border-radius: 6px;
   min-width: 34px;
+  border: 1px solid rgba(255,255,255,.15);
 }
-.play-btn:hover { background: #ffaa33; }
+.play-btn:hover { background: rgba(0,0,0,.65); }
 .play-btn svg { width: 18px; height: 18px; fill: #fff !important; stroke: none !important; }
 .play-btn svg path { fill: #fff !important; stroke: none !important; }
 
