@@ -1328,7 +1328,7 @@
       }
     }
     isActivated = false;
-    els.activateMask.hidden = false;
+    if (els.activateMask) els.activateMask.hidden = false;
     if (els.actMsg) { els.actMsg.textContent = ''; els.actMsg.className = ''; }
     if (els.actExp) els.actExp.textContent = '未激活';
   }
@@ -1382,14 +1382,17 @@
   /* ---------- 启动 ---------- */
   document.addEventListener('DOMContentLoaded', async () => {
     cacheElements();
-    bindEvents();
-    els.btnConvert.addEventListener('click', () => convertAndPlay());
-    els.btnActivate.addEventListener('click', () => doActivate());
-    els.actCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') doActivate(); });
-    bindV5Features();
-    // 激活检查优先执行，确保未激活时一定弹出激活窗口
-    // （放在 init 之前，避免 init 出错导致激活检查被跳过）
+    // 【最高优先级】激活检查最先执行，确保未激活时一定弹出激活窗口
+    // 放在所有其他初始化之前，避免任何其他代码报错导致激活检查被跳过
     try { await checkActivation(); } catch (e) { console.warn('激活检查出错：', e); }
+    // 以下初始化都加 try-catch，单个模块出错不影响整体
+    try { bindEvents(); } catch (e) { console.warn('bindEvents 出错：', e); }
+    try {
+      if (els.btnConvert) els.btnConvert.addEventListener('click', () => convertAndPlay());
+      if (els.btnActivate) els.btnActivate.addEventListener('click', () => doActivate());
+      if (els.actCode) els.actCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') doActivate(); });
+    } catch (e) { console.warn('按钮绑定出错：', e); }
+    try { bindV5Features(); } catch (e) { console.warn('bindV5Features 出错：', e); }
     try { await init(); } catch (e) { console.warn('初始化出错：', e); }
   });
 
