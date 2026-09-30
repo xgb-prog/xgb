@@ -203,6 +203,12 @@
 
   /* ---------- 播放指定集 ---------- */
   async function playEpisode(ep) {
+    // 安全拦截：未激活时禁止播放任何集
+    if (!isActivated) {
+      if (els.activateMask) els.activateMask.hidden = false;
+      if (els.actMsg) { els.actMsg.textContent = '请先激活后再使用'; els.actMsg.className = 'err'; }
+      return;
+    }
     state.currentEp = ep;
     const epData = state.eps[ep] || {};
     // 更新顶部信息栏（剧名 + 集数分开显示）
@@ -1293,21 +1299,53 @@
             const currentFp = await getDeviceFingerprint();
             if (currentFp !== lic.deviceFingerprint && currentFp !== 'unknown' && lic.deviceFingerprint !== 'unknown') {
               isActivated = false;
-              els.activateMask.hidden = false;
+              if (els.activateMask) els.activateMask.hidden = false;
               if (els.actMsg) { els.actMsg.textContent = '该激活码已绑定其他设备，无法在本设备使用。如需更换设备请联系客服。'; els.actMsg.className = 'err'; }
               if (els.actExp) els.actExp.textContent = '设备不匹配';
               return;
             }
           }
+          // === 服务端实时校验（防篡改localStorage）===
+          if (state.licenseServerEnabled && state.licenseServer) {
+            try {
+              const currentFp = await getDeviceFingerprint();
+              const verifyRes = await fetch(state.licenseServer + '/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: lic.code, deviceFingerprint: currentFp })
+              });
+              const verifyData = await verifyRes.json();
+              if (!verifyData.ok) {
+                // 服务端不认这条记录，清除本地伪造记录
+                try { localStorage.removeItem(LICENSE_KEY); } catch (e) {}
+                isActivated = false;
+                if (els.activateMask) els.activateMask.hidden = false;
+                if (els.actMsg) { els.actMsg.textContent = verifyData.msg || '激活状态校验失败，请重新激活'; els.actMsg.className = 'err'; }
+                if (els.actExp) els.actExp.textContent = '未激活';
+                return;
+              }
+              // 服务端返回的真实到期时间，以服务端为准
+              const serverExpireAt = verifyData.expireAt || expireAt;
+              const remainDays = verifyData.remainDays != null ? verifyData.remainDays : Math.ceil((serverExpireAt - now) / (24 * 3600 * 1000));
+              isActivated = true;
+              if (els.activateMask) els.activateMask.hidden = true;
+              const typeName = days === 1 ? '试用卡' : (days >= 365 ? '年卡' : '月卡');
+              if (els.actExp) els.actExp.textContent = '已激活（' + typeName + '），剩余 ' + remainDays + ' 天，到期：' + fmtExpDate(serverExpireAt);
+              return;
+            } catch (e) {
+              // 网络错误时不阻断使用，避免服务器挂了导致所有用户用不了
+              console.warn('服务端校验失败，本地放行：', e.message);
+            }
+          }
           isActivated = true;
-          els.activateMask.hidden = true;
+          if (els.activateMask) els.activateMask.hidden = true;
           const typeName = days === 1 ? '试用卡' : (days >= 365 ? '年卡' : '月卡');
           const remainDays = Math.ceil((expireAt - now) / (24 * 3600 * 1000));
           if (els.actExp) els.actExp.textContent = '已激活（' + typeName + '），剩余 ' + remainDays + ' 天，到期：' + fmtExpDate(expireAt);
           return;
         }
         isActivated = false;
-        els.activateMask.hidden = false;
+        if (els.activateMask) els.activateMask.hidden = false;
         if (els.actMsg) { els.actMsg.textContent = '激活码已过期（' + fmtExpDate(expireAt) + ' 到期），请输入新的激活码续期'; els.actMsg.className = 'err'; }
         if (els.actExp) els.actExp.textContent = '未激活';
         return;
@@ -1321,7 +1359,7 @@
           if (window.playerAPI && window.playerAPI.saveLicense) window.playerAPI.saveLicense(lic);
         } catch (e) {}
         isActivated = true;
-        els.activateMask.hidden = true;
+        if (els.activateMask) els.activateMask.hidden = true;
         const remainDays = r.days;
         if (els.actExp) els.actExp.textContent = '已激活，剩余 ' + remainDays + ' 天，到期：' + fmtExpDate(Date.now() + r.days * 24 * 3600 * 1000);
         return;
