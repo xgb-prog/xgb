@@ -1,5 +1,5 @@
 /* Service Worker — 智能播放器 PWA 离线缓存 */
-const CACHE = 'smart-player-v2';  // 升级版本号，强制更新
+const CACHE = 'smart-player-v4';  // 升级版本号，强制更新
 const ASSETS = [
   './',
   './index.html',
