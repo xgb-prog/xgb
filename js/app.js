@@ -951,8 +951,8 @@
     // 一键生成所有集标题
     if (els.btnGenAllTitles) {
       els.btnGenAllTitles.addEventListener('click', () => {
-        const name = (els.setSeriesName?.value || '').trim() || state.seriesName;
-        const count = Math.max(1, Math.min(999, parseInt(els.setEpCount?.value, 10) || state.totalEpisodes));
+        const name = ((els.setSeriesName && els.setSeriesName.value) || '').trim() || state.seriesName;
+        const count = Math.max(1, Math.min(999, parseInt((els.setEpCount && els.setEpCount.value), 10) || state.totalEpisodes));
         if (!confirm('确定要为全部 ' + count + ' 集生成标题吗？\n格式：' + name + '·第N集\n（已有的自定义标题会被覆盖）')) return;
         for (let i = 1; i <= count; i++) {
           if (!state.eps[i]) state.eps[i] = {};
@@ -1090,11 +1090,11 @@
 
   function saveSettings() {
     try {
-    state.seriesName = (els.setSeriesName?.value || '').trim() || '智能播放器';
-    state.totalEpisodes = Math.max(1, Math.min(999, parseInt(els.setEpCount?.value, 10) || 1));
-    state.accentColor = els.setColor?.value || '#ff3b30';
-    state.ratio = els.setRatio?.value || 'auto';
-    state.speed = parseFloat(els.setSpeed?.value) || 1;
+    state.seriesName = ((els.setSeriesName && els.setSeriesName.value) || '').trim() || '智能播放器';
+    state.totalEpisodes = Math.max(1, Math.min(999, parseInt((els.setEpCount && els.setEpCount.value), 10) || 1));
+    state.accentColor = (els.setColor && els.setColor.value) || '#ff3b30';
+    state.ratio = (els.setRatio && els.setRatio.value) || 'auto';
+    state.speed = parseFloat((els.setSpeed && els.setSpeed.value)) || 1;
     if (els.setCustomDuration) state.customDuration = Math.max(0, parseFloat(els.setCustomDuration.value) || 0);
     if (els.setEpDisplayMode) state.epDisplayMode = els.setEpDisplayMode.value || 'full';
     if (els.setDanmakuInput) state.danmakuInputVisible = els.setDanmakuInput.value === '1';
@@ -1104,7 +1104,7 @@
     applyDanmakuInputVisibility();
 
     if (!state.eps[state.currentEp]) state.eps[state.currentEp] = {};
-    const t = (els.setEpTitle?.value || '').trim();
+    const t = ((els.setEpTitle && els.setEpTitle.value) || '').trim();
     if (t) state.eps[state.currentEp].title = t;
     else delete state.eps[state.currentEp].title;
 
