@@ -187,19 +187,24 @@ export async function onRequest(context) {
       if (licenses[code]) {
         const lic = licenses[code];
         if (lic.deviceFingerprint === deviceFingerprint) {
-          lic.activatedAt = Date.now();
           // 忽略客户端传的 days，使用激活码本身的类型决定天数
           const cardType = code.match(/^FGMM-([DMY])-/)[1];
-          lic.days = cardType === 'D' ? 1 : (cardType === 'Y' ? 365 : 30);
-          delete lic.remainingDays;
-          delete lic.unboundAt;
-          await redisSet(env, LICENSES_KEY, licenses);
+          const days = cardType === 'D' ? 1 : (cardType === 'Y' ? 365 : 30);
+          const expireAt = lic.activatedAt + days * 24 * 3600 * 1000;
+          // 【防漏洞】同一设备重复激活时，禁止重置激活时间！
+          // 到期前重复激活：返回当前状态，不修改任何时间
+          if (Date.now() < expireAt) {
+            return jsonResponse({
+              ok: true, msg: '该激活码已在当前设备激活且未过期',
+              activatedAt: lic.activatedAt,
+              expireAt: expireAt,
+              days: days
+            });
+          }
+          // 已过期：拒绝续期，必须购买新激活码
           return jsonResponse({
-            ok: true, msg: '激活成功（同一设备续期）',
-            activatedAt: lic.activatedAt,
-            expireAt: lic.activatedAt + lic.days * 24 * 3600 * 1000,
-            days: lic.days
-          });
+            ok: false, msg: '该激活码已过期，无法重新激活。如需继续使用请购买新的激活码。'
+          }, 403);
         } else if (lic.deviceFingerprint === null || lic.deviceFingerprint === undefined) {
           const remainingDays = lic.remainingDays || lic.days || 30;
           lic.deviceFingerprint = deviceFingerprint;
@@ -207,6 +212,13 @@ export async function onRequest(context) {
           lic.days = remainingDays;
           delete lic.remainingDays;
           delete lic.unboundAt;
+          // 【数据一致性】同步更新激活码状态，防止统计重复计数 / 管理端显示错误
+          if (codes[code]) {
+            codes[code].status = 'activated';
+            codes[code].activatedAt = lic.activatedAt;
+            codes[code].deviceFingerprint = deviceFingerprint;
+            await redisSet(env, CODES_KEY, codes);
+          }
           await redisSet(env, LICENSES_KEY, licenses);
           return jsonResponse({
             ok: true, msg: `激活成功（更换设备，剩余${remainingDays}天）`,
@@ -255,6 +267,12 @@ export async function onRequest(context) {
       const { code, deviceFingerprint } = body;
       const licenses = await redisGet(env, LICENSES_KEY) || {};
       if (!licenses[code]) return jsonResponse({ ok: false, msg: '激活码未激活' }, 200);
+      // 【防漏洞】检查激活码是否被管理员禁用 / 是否在激活码表中（防止孤立授权）
+      const codes = await redisGet(env, CODES_KEY) || {};
+      if (!codes[code]) return jsonResponse({ ok: false, msg: '激活码不存在或已失效，请联系客服' }, 403);
+      if (codes[code].status === 'disabled') {
+        return jsonResponse({ ok: false, msg: '该激活码已被禁用，请联系客服' }, 403);
+      }
       const lic = licenses[code];
       if (lic.deviceFingerprint === null || lic.deviceFingerprint === undefined) return jsonResponse({ ok: false, msg: '激活码已解绑，请重新激活' }, 200);
       if (lic.deviceFingerprint !== deviceFingerprint) return jsonResponse({ ok: false, msg: '该激活码已绑定其他设备' }, 403);
@@ -422,7 +440,14 @@ export async function onRequest(context) {
       codes[code].enabledAt = Date.now();
       delete codes[code].disabledAt;
       await redisSet(env, CODES_KEY, codes);
-      return jsonResponse({ ok: true, msg: '激活码已启用（状态改为未激活）', code });
+      // 【防漏洞】启用已激活过的卡时，清除残留授权记录，彻底重置
+      // 防止旧设备继续使用、新买家无法激活的冲突
+      const licenses = await redisGet(env, LICENSES_KEY) || {};
+      if (licenses[code]) {
+        delete licenses[code];
+        await redisSet(env, LICENSES_KEY, licenses);
+      }
+      return jsonResponse({ ok: true, msg: '激活码已启用（状态改为未激活，旧授权记录已清除）', code });
     } catch (e) {
       return jsonResponse({ ok: false, msg: '服务器错误: ' + e.message }, 500);
     }
@@ -444,13 +469,16 @@ export async function onRequest(context) {
         delete licenses[code];
         const codes = await redisGet(env, CODES_KEY) || {};
         if (codes[code]) {
-          codes[code].status = 'unused';
+          // 【防漏洞】过期卡解绑后直接作废（disabled），禁止被重新激活
+          // 防止：管理员清理过期卡 → 卡变 unused → 原用户/新用户重新激活又得满额天数
+          codes[code].status = 'disabled';
+          codes[code].disabledAt = Date.now();
           delete codes[code].activatedAt;
           delete codes[code].deviceFingerprint;
           await redisSet(env, CODES_KEY, codes);
         }
         await redisSet(env, LICENSES_KEY, licenses);
-        return jsonResponse({ ok: true, msg: '激活码已过期，已删除', code, expired: true });
+        return jsonResponse({ ok: true, msg: '激活码已过期，已删除并作废', code, expired: true });
       }
       lic.deviceFingerprint = null;
       lic.remainingDays = remainingDays;

@@ -121,7 +121,12 @@
         els.video.play().catch(() => {});
       });
       hls.on(Hls.Events.ERROR, (evt, data) => {
-        if (data.fatal) showPosterEmpty('HLS 加载失败：可能链接需要鉴权、已失效或服务器禁止跨域访问');
+        if (data.fatal) {
+          // 【修复】致命错误时销毁 HLS 实例，释放资源
+          try { hls.destroy(); } catch (e2) {}
+          hls = null;
+          showPosterEmpty('HLS 加载失败：可能链接需要鉴权、已失效或服务器禁止跨域访问');
+        }
       });
     } else if (isFlv(url) && window.flvjs && flvjs.isSupported()) {
       flvPlayer = flvjs.createPlayer({ type: 'flv', url: url });
@@ -356,7 +361,15 @@
               saveState();
             }
           } catch (e) {
+            // 【修复】写入失败时清除临时 URL 和本地标记，防止下次播放失效地址黑屏
             console.warn('视频后台保存失败：', e);
+            try {
+              if (state.eps[ep] && state.eps[ep]._tempUrl === objectUrl) {
+                delete state.eps[ep]._tempUrl;
+              }
+              localVideos.delete(ep);
+              saveState();
+            } catch (e2) {}
           }
         })();
       } else {
@@ -623,13 +636,16 @@
       } catch(e) {}
     }
     hideNetlifyBadge();
-    setInterval(hideNetlifyBadge, 500);
+    // 【性能】降频到每2秒一次，避免高频全DOM扫描拖慢低端安卓机
+    setInterval(hideNetlifyBadge, 2000);
 
-    // PWA 环境下强制启用服务端验证，忽略 localStorage 中的旧设置
-    // （Electron 有 window.playerAPI，安卓有 window.androidAPI，PWA 都没有）
-    const isPWA = !window.playerAPI && !window.androidAPI;
-    if (isPWA) {
-      state.licenseServerEnabled = true;
+    // 【防漏洞】所有环境强制启用服务端验证，忽略 localStorage 中可能被篡改的设置
+    // （PWA 无原生壳、安卓 WebView、Electron 均强制；Electron 保留自定义服务器地址）
+    state.licenseServerEnabled = true;
+    if (!window.playerAPI) {
+      // PWA / 安卓：固定同源 /api，禁止修改
+      state.licenseServer = '/api';
+    } else if (!state.licenseServer) {
       state.licenseServer = '/api';
     }
 
@@ -736,7 +752,8 @@
     // 单击画面：切换播放/暂停
     let lastClickTime = 0;
     els.videoStage.addEventListener('click', (e) => {
-      if (e.target.closest('.more-menu') || e.target.closest('.episode-panel')) return;
+      // 【修复】控制栏区域点击不触发播放/暂停（防止点下一集/全屏/进度条导致视频暂停）
+      if (e.target.closest('.more-menu') || e.target.closest('.episode-panel') || e.target.closest('.controls')) return;
       const now = Date.now();
       if (now - lastClickTime < 300) return; // 双击不再触发单击
       lastClickTime = now;
@@ -825,7 +842,8 @@
     });
 
     // 下一集
-    els.btnNext.addEventListener('click', () => {
+    els.btnNext.addEventListener('click', (e) => {
+      e.stopPropagation();  // 【修复】防止冒泡到 videoStage 触发播放/暂停
       if (state.currentEp < state.totalEpisodes) playEpisode(state.currentEp + 1);
     });
 
@@ -863,8 +881,8 @@
         }
       } catch (e) {}
     }
-    els.btnFull.addEventListener('click', toggleFullscreen);
-    if (els.btnTitleFull) els.btnTitleFull.addEventListener('click', toggleFullscreen);
+    els.btnFull.addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });  // 【修复】阻止冒泡触发播放/暂停
+    if (els.btnTitleFull) els.btnTitleFull.addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });
     if (els.btnBack) {
       els.btnBack.addEventListener('click', () => applyFullscreen(false));
       els.btnBack.addEventListener('touchstart', (e) => { e.preventDefault(); applyFullscreen(false); }, { passive: false });
@@ -1031,7 +1049,9 @@
 
     // 键盘快捷键
     document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT') return;
+      // 【修复】排除输入控件、下拉框、按钮焦点，避免误触播放控制
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON') return;
       if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
       if (e.key === 'ArrowRight') { if (els.video.duration) els.video.currentTime = Math.min(els.video.duration, els.video.currentTime + 5); }
       if (e.key === 'ArrowLeft') { if (els.video.duration) els.video.currentTime = Math.max(0, els.video.currentTime - 5); }
@@ -1105,8 +1125,16 @@
     if (els.setEpDisplayMode) state.epDisplayMode = els.setEpDisplayMode.value || 'full';
     if (els.setDanmakuInput) state.danmakuInputVisible = els.setDanmakuInput.value === '1';
     if (els.setDanmakuMode) state.danmakuMode = els.setDanmakuMode.value;
-    if (els.setLicenseServerEnabled) state.licenseServerEnabled = els.setLicenseServerEnabled.checked;
-    if (els.setLicenseServer) state.licenseServer = els.setLicenseServer.value.trim();
+    // 【防漏洞】服务端验证强制开启、服务器地址固定，禁止用户修改！
+    // 否则可伪造本地记录 + 关闭验证 / 指向自建假服务器绕过激活
+    state.licenseServerEnabled = true;
+    if (window.playerAPI) {
+      // Electron 环境：保留服务器地址设置（加载方式是本地文件，需绝对地址）
+      if (els.setLicenseServer) state.licenseServer = els.setLicenseServer.value.trim() || '/api';
+    } else {
+      // PWA / 安卓：固定同源 /api，禁止修改
+      state.licenseServer = '/api';
+    }
     applyDanmakuInputVisibility();
 
     if (!state.eps[state.currentEp]) state.eps[state.currentEp] = {};
@@ -1153,7 +1181,6 @@
 
   /* ---------- 激活系统（月卡：从激活时间起30天有效） ---------- */
   const LICENSE_KEY = 'fgmm_license_v1';
-  const SECRET = 'FGMM-MANJU-2026';
   const LICENSE_DAYS = 30;   // 月卡有效期（天）
 
   /* 内置5个月卡测试激活码（需先导入服务器才能使用）：
@@ -1164,16 +1191,6 @@
      FGMM-M-0005-63DD
   */
 
-  function fnvSigSeq(seq, type) {
-    // 新格式：FNV-1a 对 类型|序号|SECRET 求哈希
-    let h = 0x811c9dc5;
-    const s = (type || 'M') + '|' + (seq || '0000') + '|' + SECRET;
-    for (let i = 0; i < s.length; i++) {
-      h ^= s.charCodeAt(i) & 0xff;
-      h = Math.imul(h, 0x01000193) >>> 0;
-    }
-    return (h & 0xffff).toString(16).toUpperCase().padStart(4, '0');
-  }
   // 卡类型对应的有效天数
   function licenseDays(type) {
     if (type === 'D') return 1;       // 1天试用卡
@@ -1181,39 +1198,25 @@
     return 30;                          // 月卡（默认）
   }
 
-  function fnvSigOld(expStr, seq) {
-    // 旧格式兼容：FNV-1a 对 日期|序号|SECRET 求哈希
-    let h = 0x811c9dc5;
-    const s = expStr + '|' + (seq || '0000') + '|' + SECRET;
-    for (let i = 0; i < s.length; i++) {
-      h ^= s.charCodeAt(i) & 0xff;
-      h = Math.imul(h, 0x01000193) >>> 0;
-    }
-    return (h & 0xffff).toString(16).toUpperCase().padStart(4, '0');
-  }
-
   function parseCode(code) {
     code = String(code || '').trim().toUpperCase();
-    // v6 格式：FGMM-类型(D/M/Y)-序号(4位)-校验码(4位hex)
+    // 【安全】仅做格式检查，不再校验校验码。
+    // 校验密钥只保存在服务端，前端不内置，防止被提取后伪造激活码。
+    // 激活码真实有效性完全由服务端决定。
     const mTyped = code.match(/^FGMM-([DMY])-(\d{4})-([0-9A-F]{4})$/);
     if (mTyped) {
-      const type = mTyped[1], seq = mTyped[2], sig = mTyped[3];
-      if (sig !== fnvSigSeq(seq, type)) return { ok: false, msg: '激活码校验失败，请检查是否输错' };
-      return { ok: true, type: type, days: licenseDays(type), msg: '激活成功' };
+      const type = mTyped[1];
+      return { ok: true, type: type, days: licenseDays(type), msg: '格式正确' };
     }
     // 旧格式兼容：FGMM-序号(4位)-校验码(4位hex) —— 默认月卡30天
     const mNew = code.match(/^FGMM-(\d{4})-([0-9A-F]{4})$/);
     if (mNew) {
-      const seq = mNew[1], sig = mNew[2];
-      if (sig !== fnvSigSeq(seq, 'M')) return { ok: false, msg: '激活码校验失败，请检查是否输错' };
-      return { ok: true, type: 'M', days: 30, msg: '激活成功' };
+      return { ok: true, type: 'M', days: 30, msg: '格式正确' };
     }
     // 旧格式兼容：FGMM-日期(8位)-序号(4位)-校验码(4位hex)
     const mOld = code.match(/^FGMM-(\d{8})-(\d{4})-([0-9A-F]{4})$/);
     if (mOld) {
-      const expStr = mOld[1], seq = mOld[2], sig = mOld[3];
-      if (sig !== fnvSigOld(expStr, seq)) return { ok: false, msg: '激活码校验失败，请检查是否输错' };
-      return { ok: true, type: 'M', days: 30, msg: '激活成功' };
+      return { ok: true, type: 'M', days: 30, msg: '格式正确' };
     }
     return { ok: false, msg: '激活码格式不正确（如 FGMM-D-0001-XXXX 天卡 / FGMM-M-0001-XXXX 月卡 / FGMM-Y-0001-XXXX 年卡）' };
   }
@@ -1309,11 +1312,16 @@
           if (state.licenseServerEnabled && state.licenseServer) {
             try {
               const currentFp = await getDeviceFingerprint();
+              // 【安全】校验请求带8秒超时，防止服务器无响应时页面卡死
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 8000);
               const verifyRes = await fetch(state.licenseServer + '/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: lic.code, deviceFingerprint: currentFp })
+                body: JSON.stringify({ code: lic.code, deviceFingerprint: currentFp }),
+                signal: controller.signal
               });
+              clearTimeout(timeoutId);
               const verifyData = await verifyRes.json();
               if (!verifyData.ok) {
                 // 服务端不认这条记录，清除本地伪造记录
@@ -1333,8 +1341,15 @@
               if (els.actExp) els.actExp.textContent = '已激活（' + typeName + '），剩余 ' + remainDays + ' 天，到期：' + fmtExpDate(serverExpireAt);
               return;
             } catch (e) {
-              // 网络错误时不阻断使用，避免服务器挂了导致所有用户用不了
-              console.warn('服务端校验失败，本地放行：', e.message);
+              // 【防漏洞】服务端校验失败时禁止本地放行！
+              // 防止攻击者拦截 /verify 请求 + 伪造本地记录实现无限期使用。
+              // 授权依赖服务器，服务器异常期间播放器暂不可用属正常保护。
+              console.warn('服务端校验失败，拒绝进入：', e.message);
+              isActivated = false;
+              if (els.activateMask) els.activateMask.hidden = false;
+              if (els.actMsg) { els.actMsg.textContent = '无法连接授权服务器，请检查网络后重新打开'; els.actMsg.className = 'err'; }
+              if (els.actExp) els.actExp.textContent = '未激活';
+              return;
             }
           }
           isActivated = true;
@@ -1352,16 +1367,12 @@
       }
       const r = parseCode(lic.code);
       if (r.ok) {
-        try {
-          lic.activatedAt = Date.now();
-          lic.days = r.days;
-          localStorage.setItem(LICENSE_KEY, JSON.stringify(lic));
-          if (window.playerAPI && window.playerAPI.saveLicense) window.playerAPI.saveLicense(lic);
-        } catch (e) {}
-        isActivated = true;
-        if (els.activateMask) els.activateMask.hidden = true;
-        const remainDays = r.days;
-        if (els.actExp) els.actExp.textContent = '已激活，剩余 ' + remainDays + ' 天，到期：' + fmtExpDate(Date.now() + r.days * 24 * 3600 * 1000);
+        // 【防漏洞】仅本地格式校验通过不允许直接激活！
+        // 缺少 activatedAt 的本地记录视为无效，必须重新走服务端激活
+        isActivated = false;
+        if (els.activateMask) els.activateMask.hidden = false;
+        if (els.actMsg) { els.actMsg.textContent = '激活记录不完整，请重新输入激活码激活'; els.actMsg.className = 'err'; }
+        if (els.actExp) els.actExp.textContent = '未激活';
         return;
       }
     }
@@ -1394,8 +1405,10 @@
       }
       // 使用服务端返回的有效期天数（如果服务端返回了的话）
       const days = serverResult.days || 30;
+      // 【防漏洞】激活时间以服务端返回为准，禁止用本地时间（防止改系统时间刷时长）
+      const activatedAt = serverResult.activatedAt || now;
       // 保存激活信息（含设备指纹）
-      const licData = { code: code, activatedAt: now, days: days, deviceFingerprint: deviceFingerprint };
+      const licData = { code: code, activatedAt: activatedAt, days: days, deviceFingerprint: deviceFingerprint };
       try { localStorage.setItem(LICENSE_KEY, JSON.stringify(licData)); } catch (e) {}
       const remember = els.actRemember ? els.actRemember.checked : true;
       if (window.playerAPI && window.playerAPI.saveLicense) {
@@ -1405,7 +1418,7 @@
       isActivated = true;
       els.activateMask.hidden = true;
       els.actMsg.textContent = '';
-      const expireAt = now + days * 24 * 3600 * 1000;
+      const expireAt = activatedAt + days * 24 * 3600 * 1000;
       const typeName = days === 1 ? '试用卡' : (days >= 365 ? '年卡' : '月卡');
       const remainDays = Math.ceil((expireAt - Date.now()) / (24 * 3600 * 1000));
       if (els.actExp) els.actExp.textContent = '已激活（' + typeName + '），剩余 ' + remainDays + ' 天，到期：' + fmtExpDate(expireAt);
